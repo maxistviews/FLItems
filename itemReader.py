@@ -270,8 +270,8 @@ def main():
     cursor.execute(create_table_sql)
 
     #List of categories to query the API
-    # categories = ["Category:Boon","Category:Hat","Category:Clothing","Category:Gloves","Category:Weapon","Category:Boots","Category:Companion","Category:Destiny","Category:Spouse","Category:Treasure","Category:Tools_of_the_Trade","Category:Affiliation","Category:Transport","Category:Home_Comfort","Category:Ship","Category:Club"]
-    categories = ["Category:Club"]
+    categories = ["Category:Boon","Category:Hat","Category:Clothing","Category:Gloves","Category:Weapon","Category:Boots","Category:Companion","Category:Destiny","Category:Spouse","Category:Treasure","Category:Tools_of_the_Trade","Category:Affiliation","Category:Transport","Category:Home_Comfort","Category:Ship","Category:Club"]
+    # categories = ["Category:Club"]
     # categories = ["Category:Companion"]
 
     # Loop over each category (ie Category:Boots)
@@ -306,20 +306,19 @@ def main():
             if content_data:
                 # Extract the effects from the page content
                 effects, origin, fate, have, ID, icon = extract_effects(content_data)
-                
+                db_id, db_page_id, db_last_update = None, None, None
                 # If we dont have the ID, skip this item.
                 if not ID:
                     print(f"SKPPING: *** NO ID in Wiki. Item: {title} ***")
                     continue
 
                 #Now we assume the item has an ID.
-
                 # Check if item already exists in database with the same last_update
                 # If an item with the same ID exists
                 cursor.execute("SELECT ID, page_id, last_update FROM items WHERE ID=?", (ID,))
-                db_id, db_page_id, db_last_update = cursor.fetchone()
-                # database_item = cursor.fetchone()
-                # db_id, db_page_id, db_last_update = database_item
+                database_item = cursor.fetchone()
+                if database_item:
+                    db_id, db_page_id, db_last_update = database_item
                 
                 # Prepare a dictionary of column names and values
                 values = {
