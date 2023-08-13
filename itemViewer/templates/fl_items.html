@@ -1,0 +1,44 @@
+<!doctype html>
+<html>
+    <head>
+        <title>Items</title>
+        <style>
+            .red { color: red; }
+            .green { color: green; }
+            .blue { color: blue; }
+            /* Add more classes as needed */
+        </style>
+        
+    </head>
+    <body>
+        {% for stats, categories in zip(all_stats, all_categories) %}
+            <table>
+                <tr>
+                    <th></th>
+                    {% for stat in stats %}
+                        <th colspan="2">{{ stat }}</th>
+                    {% endfor %}
+                </tr>
+                <tr>
+                    <th>Category</th>
+                    {% for stat in stats %}
+                        <th>Name</th>
+                        <th>+</th>
+                    {% endfor %}
+                </tr>
+                {% for i in range(categories|length) %}
+                    <tr>
+                        <td>{{ categories[i] }}</td>
+                        {% for stat in stats %}
+                            <td>{{ data[stat][i][0] }}</td>
+                            <td class="{% if data[stat][i][1] == None or data[stat][i][1] < 5 %}red{% elif data[stat][i][1] > 10 %}green{% else %}blue{% endif %}">
+                                {{ data[stat][i][1] or 0 }}
+                            </td>                            
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+            </table>
+            <hr>
+        {% endfor %}
+    </body>
+</html>

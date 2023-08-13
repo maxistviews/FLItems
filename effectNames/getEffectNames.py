@@ -41,7 +41,7 @@ def get_effect_names():
     effect_names.extend(['Nightmares','Scandal','Suspicion','Wounds'])
 
     # Write the list of effect names to a file
-    with open('effect_names.json', 'w') as f:
+    with open('effectNames.json', 'w') as f:
         json.dump(effect_names, f)
 
 
