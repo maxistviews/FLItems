@@ -11,7 +11,7 @@ tr:nth-child(even) {
     /* border-right: red; */
 }
 
-td {}
+/* td {} */
 
 .value-column {
     border-right: 1px solid #c3c3c3;
