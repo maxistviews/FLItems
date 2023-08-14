@@ -6,7 +6,7 @@ import os
 # os.chdir( os.path.dirname(absFilePath) )
 
 # Configuration
-DATABASE = 'items.db'
+DATABASE = 'itemViewer/items.db'
 
 app = Flask(__name__)
 app.config.from_object(__name__)
@@ -39,6 +39,7 @@ def show_items():
     all_categories = [categories, unchangeable_categories]
 
     data = {}
+
     for stats, categories in zip(all_stats, all_categories):
         for stat in stats:
             data[stat] = []

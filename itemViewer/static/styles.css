@@ -1,0 +1,8 @@
+.red { color: red; }
+.green { color: green; }
+.blue { color: blue; }
+/* Add more classes as needed */
+
+tr:nth-child(even) {
+    background-color: #e2e2e2;
+}

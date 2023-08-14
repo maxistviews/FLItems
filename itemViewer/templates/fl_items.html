@@ -2,24 +2,18 @@
 <html>
     <head>
         <title>Items</title>
-        <style>
-            .red { color: red; }
-            .green { color: green; }
-            .blue { color: blue; }
-            /* Add more classes as needed */
-        </style>
-        
+        <link rel="stylesheet" href="/static/styles.css" />
     </head>
     <body>
         {% for stats, categories in zip(all_stats, all_categories) %}
-            <table>
-                <tr>
-                    <th></th>
+            <table class="table">
+                <tr class="table__header">
+                    <th class="table__cell"></th>
                     {% for stat in stats %}
                         <th colspan="2">{{ stat }}</th>
                     {% endfor %}
                 </tr>
-                <tr>
+                <tr class="table__row">
                     <th>Category</th>
                     {% for stat in stats %}
                         <th>Name</th>
@@ -31,7 +25,7 @@
                         <td>{{ categories[i] }}</td>
                         {% for stat in stats %}
                             <td>{{ data[stat][i][0] }}</td>
-                            <td class="{% if data[stat][i][1] == None or data[stat][i][1] < 5 %}red{% elif data[stat][i][1] > 10 %}green{% else %}blue{% endif %}">
+                            <td>
                                 {{ data[stat][i][1] or 0 }}
                             </td>                            
                         {% endfor %}

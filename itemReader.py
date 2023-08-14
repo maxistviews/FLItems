@@ -4,12 +4,18 @@ import mwparserfromhell
 import json
 import re
 import os
+from termcolor import colored
 
 SKIP_ITEMS = {
     "A Box of Ten Delights!","A Selection of Jilt's Treasures","A Set of Wedding Lithographs","Amber Carnival Token","Anticandle (Second Chance)","Archaeologist's Hat","Calamitous Parrot","Chrysalis Candle (Retired)","Crumbled Remnant","Echo (Harbour Provisioners)","Exceptional Petal","Feducci's Confession","Forbidden Map-Fragment","Fuel","Gambit: Benjamin's Friends","Gift of Adoration","Handsome Lad with a Healthy Appetite","His Amused Lordship's Confession","Iron Knife Token","Knife-and-Candle: A Proud Parade of Victories","Knot-name","Letter of introduction","Lettice's Confession","Listening Candle","Montaigne Lantern","Noise-Eaters","Order of the Wistful Rose, First Class","Order of the Wistful Rose, Second Class","Order of the Wistful Rose, Third Class","Order Ovate, Blood","Order Ovate, Glory","Order Ovate, Ice","Order Ovate, Night","Order Vespertine, Merciless","Order Vespertine, Monstrous","Order Vespertine, Perilous","Primitive Hat","Queer Parcel","Retired Vake-Hunter's Rifle","Sharp Iron Key","Sinning Jenny's Confession","St Beau's Candle (old)","Supplies","Surprise Attack Plan","The Ambitious Barrister's Confession","The Bishop of St Fiacre's' Confession","The Captivating Princess' Confession","The Cheery Man's Confession","The Illuminated Gentleman's Confession","The Jovial Contrarian's Confession","The Kashmiri Princess' Confession","The Melancholy Curate's Confession","The Soft-Hearted Widow's Confession","The Veteran Privy Councillor's Confession","Twincandle", "Mitigating Factor", "Category:Connected Pet","Category:Knife-and-Candle Medals"
     }
 
 OVERWRITE_ALL = False  # Set to False if you don't want to overwrite every database entry
+#List of categories to query the API
+api_categories = ["Category:Boon","Category:Hat","Category:Clothing","Category:Gloves","Category:Weapon","Category:Boots","Category:Companion","Category:Destiny","Category:Spouse","Category:Treasure","Category:Tools_of_the_Trade","Category:Affiliation","Category:Transport","Category:Home_Comfort","Category:Ship","Category:Club"]
+# api_categories = ["Category:Boon","Category:Weapon"]
+# api_categories = ["Category:Companion"]
+
 dashes = "=========================================\n"
 
 # Function to fetch the content of a specific page using the page_id
@@ -34,14 +40,14 @@ def get_page_content(page_id):
     # If the request was successful, return the data
     if response.status_code == 200:
         data = response.json()
-        print(response.text)
+        # print(response.text)
 
         content = data["query"]["pages"][0]["revisions"][0]["slots"]["main"]
         last_update = data["query"]["pages"][0]["revisions"][0]["revid"]
         return content, last_update
     # If the request failed, print an error message and return None
     else:
-        print(f"Request failed with status code: {response.status_code}")
+        print(f"ERROR: Request failed with status code: {response.status_code}.\nCheck if API/Wiki is down.")
         return None, None
 
 def get_items(category_title):
@@ -75,7 +81,8 @@ def get_items(category_title):
                 break
         # If the request failed, print an error message and return an empty list
         else:
-            print("Request failed with status code: {response.status_code}")
+            
+            print(f"ERROR: Request failed with status code: {response.status_code}.\nCheck if API/Wiki is down.")
             break
 
     return items
@@ -211,8 +218,8 @@ def extract_effects(page_content):
             # elif "Category:Some Other Category" in categories:
             #     origin = "Some Other Origin Value"
 
-
-    print(origin)
+    # Debugging origin
+    # print(f"DEBUG: Item origin: {origin}")
     return effects, origin, fate, have, ID, icon
 
 
@@ -220,28 +227,38 @@ def sanitize_column_name(name):
     sanitized_name = re.sub(r'\W|^(?=\d)','_', name)
     return sanitized_name.rstrip('_')
 
-def insert_or_update_audit_log(cursor, page_id, old_value, new_value):
-    cursor.execute("SELECT old_value, new_value FROM audit_log WHERE page_id=?", (page_id,))
-    existing_log = cursor.fetchone()
+# # Might use this later. not now.
+# def insert_or_update_audit_log(cursor, page_id, old_value, new_value):
+#     cursor.execute("SELECT old_value, new_value FROM audit_log WHERE page_id=?", (page_id,))
+#     existing_log = cursor.fetchone()
     
-    if existing_log:
-        db_old_value, db_new_value = existing_log
-        # If the new value is different from the existing value in the audit log
-        if db_new_value != new_value:
-            cursor.execute("UPDATE audit_log SET old_value=?, new_value=? WHERE page_id=?", (db_new_value, new_value, page_id))
-    else:
-        cursor.execute("INSERT INTO audit_log (page_id, old_value, new_value) VALUES (?, ?, ?)", (page_id, old_value, new_value))
+#     if existing_log:
+#         db_old_value, db_new_value = existing_log
+#         # If the new value is different from the existing value in the audit log
+#         if db_new_value != new_value:
+#             cursor.execute("UPDATE audit_log SET old_value=?, new_value=? WHERE page_id=?", (db_new_value, new_value, page_id))
+#     else:
+#         cursor.execute("INSERT INTO audit_log (page_id, old_value, new_value) VALUES (?, ?, ?)", (page_id, old_value, new_value))
 
 
 def main():
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
     # Load the effect names from the file
-    with open('effect_names.json', 'r') as f:
+    with open('effectNames/effectNames.json', 'r') as f:
         global effect_names
         effect_names = json.load(f)
 
+    global infoError, infoNew, infoSkipped
+    infoError, infoNew, infoSkipped = 0, 0, 0
+
+    # Define the relative path to the database
+    db_path = "itemViewer/items.db"
+    # Get the absolute path
+    full_db_path = os.path.abspath(db_path)
+    print(f"Connecting to database at: {full_db_path}")
+
     # Connect to the SQLite database
-    conn = sqlite3.connect("items.db")
+    conn = sqlite3.connect(full_db_path)
     cursor = conn.cursor()
 
     # Create the "items" table if it doesn't already exist
@@ -257,25 +274,20 @@ def main():
                 "icon TEXT"]
 	
     # Create the "audit_log" table if it doesn't already exist. Not using this rightnow.
-    cursor.execute("""CREATE TABLE IF NOT EXISTS audit_log (
-                    log_id INTEGER PRIMARY KEY,
-                    page_id INTEGER,
-                    old_value TEXT,
-                    new_value TEXT,
-                    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)""")
+    # cursor.execute("""CREATE TABLE IF NOT EXISTS audit_log (
+    #                 log_id INTEGER PRIMARY KEY,
+    #                 page_id INTEGER,
+    #                 old_value TEXT,
+    #                 new_value TEXT,
+    #                 timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)""")
 
     for effect_name in effect_names:
         columns.append(f"{sanitize_column_name(effect_name)} INTEGER")
     create_table_sql = "CREATE TABLE IF NOT EXISTS items (" + ", ".join(columns) + ")"
     cursor.execute(create_table_sql)
 
-    #List of categories to query the API
-    categories = ["Category:Boon","Category:Hat","Category:Clothing","Category:Gloves","Category:Weapon","Category:Boots","Category:Companion","Category:Destiny","Category:Spouse","Category:Treasure","Category:Tools_of_the_Trade","Category:Affiliation","Category:Transport","Category:Home_Comfort","Category:Ship","Category:Club"]
-    # categories = ["Category:Club"]
-    # categories = ["Category:Companion"]
-
     # Loop over each category (ie Category:Boots)
-    for category in categories:
+    for category in api_categories:
         # Remove the "Category:" prefix from the category name
         category_name = category.replace("Category:", "")
 
@@ -288,18 +300,28 @@ def main():
         # Loop over each item
         for item in items:
             title = item["title"]
-						# Use get method to fetch ID and default to None if not found
+			# Use get method to fetch ID and default to None if not found
             page_id = item.get("pageid", None)
 
             # If the item doesn't have an ID or is in the skip list, continue to the next iteration
             if title in SKIP_ITEMS:
-                print(f"Skipping item: {title}")
+                print(colored(f"INFO: SKIPPING Known Item with no ID: {title}","gray"))
+                infoSkipped +=1
                 continue
 
-            print("\nItem name: " + title)
+            print("Item name: " + title)
 
             # Get the content of the item's page
             content_data, last_update = get_page_content(page_id)
+
+            # Extract the DISPLAYTITLE value from the page content, if available
+            # The only case I've seen so far is for "M. D_____' A_____ for _______: F____ Edition", but there may be others in the future!
+            if content_data:
+                display_title_pattern = re.compile(r"{{DISPLAYTITLE:(.*?)}}")
+                match = display_title_pattern.search(content_data['content'])
+                if match:
+                    title = match.group(1).strip()
+                    print(f"INFO: Changed Item name to Wiki display name: {title}")
 
             # print(page_content)
             # If the page content was successfully retrieved
@@ -309,7 +331,8 @@ def main():
                 db_id, db_page_id, db_last_update = None, None, None
                 # If we dont have the ID, skip this item.
                 if not ID:
-                    print(f"SKPPING: *** NO ID in Wiki. Item: {title} ***")
+                    print(f"INFO: SKIPPING. UNKNOWN ITEM: *** NO ID in Wiki. Item: {title} ***")
+                    infoSkipped +=1
                     continue
 
                 #Now we assume the item has an ID.
@@ -354,16 +377,19 @@ def main():
                         if db_last_update != last_update:
                             values_without_page_id_or_have = {key: values[key] for key in values if key != "page_id" and key != "have"}
                             sql_update = "UPDATE items SET " + ", ".join(f"{key} = ?" for key in values_without_page_id_or_have) + " WHERE ID = ?"
-                            cursor.execute(sql_update, list(values_without_page_id_or_have.values()) + db_id)
+                            cursor.execute(sql_update, list(values_without_page_id_or_have.values()) + [db_id])
 
                         elif db_last_update == last_update or not OVERWRITE_ALL:
-                            print(f"SKIPPING: Up to Date. Item: {title}")
+                            print(f"INFO: SKIPPING. Up to Date. Item: {title}")
+                            infoSkipped +=1
                             continue
                         # now if the if statement returns false, we need to update the database.
                         else:
-                            print("ERROR: ID and page_id is the same, but there was an error with last_update.")
+                            print(colored("ERROR: ID and page_id is the same, but there was an error with last_update.","red"))
+                            infoError +=1
                     else:
-                        print("ERROR: ID Found, but there was an error with page_id.")
+                        print(colored("ERROR: ID Found, but there was an error with page_id.","red"))
+                        infoError +=1
 
                 # Item ID doesn't exist in the database. Its a New Item!
                 else:  
@@ -373,7 +399,9 @@ def main():
 
                     sql_insert = f"INSERT INTO items ({columns}) VALUES ({placeholders})"
                     cursor.execute(sql_insert, list(values.values()))
-                    print("*** New Item! Adding. ***")
+                    print(colored("INFO: *** New Item! Adding. ***","green"))
+
+                    infoNew +=1
     # Commit the changes and close the connection to the database
     conn.commit()
     conn.close()
@@ -384,3 +412,9 @@ if __name__ == "__main__":
     main()
 
     print(dashes + "DONE!\n" + dashes)
+    if infoError > 0: 
+        print(f"Errors: {infoError}")
+    else:
+        print("No Errors.")
+    print(f"Skipped Items: {infoSkipped}")
+    print(f"New Items: {infoNew}")
