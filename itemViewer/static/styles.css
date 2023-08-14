@@ -6,3 +6,13 @@
 tr:nth-child(even) {
     background-color: #e2e2e2;
 }
+.table {
+    border-spacing: 0;
+    /* border-right: red; */
+}
+
+td {}
+
+.value-column {
+    border-right: 1px solid #c3c3c3;
+}

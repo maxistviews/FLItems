@@ -1,0 +1,48 @@
+{% macro render_table2(table_data,stats_group) %}
+    <table>
+        <tr>
+            <th>Category</th>
+            {% for group in stats_group %}
+                {% for stat in group %}
+                    <th>{{ stat }} Title</th>
+                    <th>{{ stat }}</th>
+                {% endfor %}
+            {% endfor %}
+        </tr>
+        {% for row in table_data %}
+            <tr>
+                {% for cell in row %}
+                    <td>{{ cell }}</td>
+                {% endfor %}
+            </tr>
+        {% endfor %}
+    </table>
+    <hr>
+{% endmacro %}
+
+{% macro render_table(table_data, stats_group) %}
+    <table class="table">
+        <tr>
+            <th rowspan="2">Category</th>
+            {% for stat_group in stats_group %}
+                <th colspan="{{ stat_group|length * 2 }}">{{ stat_group[0] }} - {{ stat_group[-1] }}</th>
+            {% endfor %}
+        </tr>
+        <tr>
+            {% for stat_group in stats_group %}
+                {% for stat in stat_group %}
+                    <th>{{ stat|replace("_", " ") }}</th>
+                    <th>Value</th>
+                {% endfor %}
+            {% endfor %}
+        </tr>
+        {% for row in table_data %}
+            <tr>
+                {% for cell in row %}
+                <td {% if loop.index is odd %} class="value-column"{% endif %}>{{ cell }}</td>
+                {% endfor %}
+            </tr>
+        {% endfor %}
+    </table>
+    <hr>
+{% endmacro %}

@@ -10,10 +10,12 @@ SKIP_ITEMS = {
     "A Box of Ten Delights!","A Selection of Jilt's Treasures","A Set of Wedding Lithographs","Amber Carnival Token","Anticandle (Second Chance)","Archaeologist's Hat","Calamitous Parrot","Chrysalis Candle (Retired)","Crumbled Remnant","Echo (Harbour Provisioners)","Exceptional Petal","Feducci's Confession","Forbidden Map-Fragment","Fuel","Gambit: Benjamin's Friends","Gift of Adoration","Handsome Lad with a Healthy Appetite","His Amused Lordship's Confession","Iron Knife Token","Knife-and-Candle: A Proud Parade of Victories","Knot-name","Letter of introduction","Lettice's Confession","Listening Candle","Montaigne Lantern","Noise-Eaters","Order of the Wistful Rose, First Class","Order of the Wistful Rose, Second Class","Order of the Wistful Rose, Third Class","Order Ovate, Blood","Order Ovate, Glory","Order Ovate, Ice","Order Ovate, Night","Order Vespertine, Merciless","Order Vespertine, Monstrous","Order Vespertine, Perilous","Primitive Hat","Queer Parcel","Retired Vake-Hunter's Rifle","Sharp Iron Key","Sinning Jenny's Confession","St Beau's Candle (old)","Supplies","Surprise Attack Plan","The Ambitious Barrister's Confession","The Bishop of St Fiacre's' Confession","The Captivating Princess' Confession","The Cheery Man's Confession","The Illuminated Gentleman's Confession","The Jovial Contrarian's Confession","The Kashmiri Princess' Confession","The Melancholy Curate's Confession","The Soft-Hearted Widow's Confession","The Veteran Privy Councillor's Confession","Twincandle", "Mitigating Factor", "Category:Connected Pet","Category:Knife-and-Candle Medals"
     }
 
-OVERWRITE_ALL = False  # Set to False if you don't want to overwrite every database entry
+#Config
+OVERWRITE_ALL = True  # Set to False if you don't want to overwrite every database entry
+DEBUG_PRINT_API = False
 #List of categories to query the API
 api_categories = ["Category:Boon","Category:Hat","Category:Clothing","Category:Gloves","Category:Weapon","Category:Boots","Category:Companion","Category:Destiny","Category:Spouse","Category:Treasure","Category:Tools_of_the_Trade","Category:Affiliation","Category:Transport","Category:Home_Comfort","Category:Ship","Category:Club"]
-# api_categories = ["Category:Boon","Category:Weapon"]
+# api_categories = ["Category:Weapon"]
 # api_categories = ["Category:Companion"]
 
 dashes = "=========================================\n"
@@ -40,16 +42,18 @@ def get_page_content(page_id):
     # If the request was successful, return the data
     if response.status_code == 200:
         data = response.json()
-        # print(response.text)
+        if DEBUG_PRINT_API:
+            print(colored(response.text,"grey"))
 
         content = data["query"]["pages"][0]["revisions"][0]["slots"]["main"]
         last_update = data["query"]["pages"][0]["revisions"][0]["revid"]
         return content, last_update
     # If the request failed, print an error message and return None
     else:
-        print(f"ERROR: Request failed with status code: {response.status_code}.\nCheck if API/Wiki is down.")
+        print(colored(f"ERROR: Request failed with status code: {response.status_code}.\nCheck if API/Wiki is down.","red"))
         return None, None
 
+# Get list of items from a specific category.
 def get_items(category_title):
     # Define the endpoint URL
     url = "https://fallenlondon.wiki/w/api.php"
@@ -82,7 +86,7 @@ def get_items(category_title):
         # If the request failed, print an error message and return an empty list
         else:
             
-            print(f"ERROR: Request failed with status code: {response.status_code}.\nCheck if API/Wiki is down.")
+            print(colored(f"ERROR: Request failed with status code: {response.status_code}.\nCheck if API/Wiki is down.","red"))
             break
 
     return items
@@ -141,18 +145,38 @@ def extract_effects(page_content):
                 elif param_name == "Fate":
                     fate_value = str(param.value.strip()).lower()
                     fate = True if fate_value == "yes" else False
+                # Extract each of the "Effects", which are the stats
+                # elif param_name.startswith("Effects"):
+                #     # Extract the effect name from the value, removing any curly braces and pipe characters
+                #     effect_name = re.sub(r"[{}|]", "", param.value.split()[0])
+                #     # Remove the 'IL' prefix from the effect name
+                #     effect_name = re.sub(r"^IL", "", effect_name)
+                #     # Extract the effect value, which is the number after the "+" sign
+                #     match = re.search(r"([+-]?\d+)", str(param.value))
+                #     if match:
+                #         effect_value = int(match.group(1))
+                #     else:
+                #         effect_value = None  # or some other default value
+                #     effects[effect_name] = effect_value
+
                 elif param_name.startswith("Effects"):
-                    # Extract the effect name from the value, removing any curly braces and pipe characters
-                    effect_name = re.sub(r"[{}|]", "", param.value.split()[0])
-                    # Remove the 'IL' prefix from the effect name
-                    effect_name = re.sub(r"^IL", "", effect_name)
+                    # Find the portion of the string between {{IL| and }}
+                    match_effect_name = re.search(r"{{IL\|(.*?)}}", str(param.value))
+                    if match_effect_name:
+                        effect_name = match_effect_name.group(1)
+                    else:
+                        effect_name = None  # or some other default value
+
                     # Extract the effect value, which is the number after the "+" sign
-                    match = re.search(r"([+-]?\d+)", str(param.value))
-                    if match:
-                        effect_value = int(match.group(1))
+                    match_effect_value = re.search(r"([+-]?\d+)", str(param.value))
+                    if match_effect_value:
+                        effect_value = int(match_effect_value.group(1))
                     else:
                         effect_value = None  # or some other default value
-                    effects[effect_name] = effect_value
+
+                    if effect_name:
+                        effects[effect_name] = effect_value
+
 
             if access is not None:
                 if access == "Festival":
@@ -252,7 +276,7 @@ def main():
     infoError, infoNew, infoSkipped = 0, 0, 0
 
     # Define the relative path to the database
-    db_path = "itemViewer/items.db"
+    db_path = "items.db"
     # Get the absolute path
     full_db_path = os.path.abspath(db_path)
     print(f"Connecting to database at: {full_db_path}")
@@ -305,7 +329,7 @@ def main():
 
             # If the item doesn't have an ID or is in the skip list, continue to the next iteration
             if title in SKIP_ITEMS:
-                print(colored(f"INFO: SKIPPING Known Item with no ID: {title}","gray"))
+                print(colored(f"INFO: SKIPPING Known Item with no ID: {title}","yellow"))
                 infoSkipped +=1
                 continue
 
@@ -321,7 +345,7 @@ def main():
                 match = display_title_pattern.search(content_data['content'])
                 if match:
                     title = match.group(1).strip()
-                    print(f"INFO: Changed Item name to Wiki display name: {title}")
+                    print(colored(f"INFO: Changed Item name to Wiki display name: {title}","yellow"))
 
             # print(page_content)
             # If the page content was successfully retrieved
@@ -331,7 +355,7 @@ def main():
                 db_id, db_page_id, db_last_update = None, None, None
                 # If we dont have the ID, skip this item.
                 if not ID:
-                    print(f"INFO: SKIPPING. UNKNOWN ITEM: *** NO ID in Wiki. Item: {title} ***")
+                    print(colored(f"INFO: SKIPPING. UNKNOWN ITEM: *** NO ID in Wiki. Item: {title} ***","yellow"))
                     infoSkipped +=1
                     continue
 
@@ -380,7 +404,7 @@ def main():
                             cursor.execute(sql_update, list(values_without_page_id_or_have.values()) + [db_id])
 
                         elif db_last_update == last_update or not OVERWRITE_ALL:
-                            print(f"INFO: SKIPPING. Up to Date. Item: {title}")
+                            print(colored(f"INFO: SKIPPING. Up to Date. Item: {title}","yellow"))
                             infoSkipped +=1
                             continue
                         # now if the if statement returns false, we need to update the database.
@@ -399,7 +423,7 @@ def main():
 
                     sql_insert = f"INSERT INTO items ({columns}) VALUES ({placeholders})"
                     cursor.execute(sql_insert, list(values.values()))
-                    print(colored("INFO: *** New Item! Adding. ***","green"))
+                    print(colored("INFO: *** New Item! Adding. ***",'green'))
 
                     infoNew +=1
     # Commit the changes and close the connection to the database

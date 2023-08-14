@@ -1,3 +1,4 @@
+{% from 'macros.html' import render_table %}
 <!doctype html>
 <html>
     <head>
@@ -5,34 +6,12 @@
         <link rel="stylesheet" href="/static/styles.css" />
     </head>
     <body>
-        {% for stats, categories in zip(all_stats, all_categories) %}
-            <table class="table">
-                <tr class="table__header">
-                    <th class="table__cell"></th>
-                    {% for stat in stats %}
-                        <th colspan="2">{{ stat }}</th>
-                    {% endfor %}
-                </tr>
-                <tr class="table__row">
-                    <th>Category</th>
-                    {% for stat in stats %}
-                        <th>Name</th>
-                        <th>+</th>
-                    {% endfor %}
-                </tr>
-                {% for i in range(categories|length) %}
-                    <tr>
-                        <td>{{ categories[i] }}</td>
-                        {% for stat in stats %}
-                            <td>{{ data[stat][i][0] }}</td>
-                            <td>
-                                {{ data[stat][i][1] or 0 }}
-                            </td>                            
-                        {% endfor %}
-                    </tr>
-                {% endfor %}
-            </table>
-            <hr>
-        {% endfor %}
+        <h1>Items with have=1</h1>
+        {{ render_table(table_have_1,stats_group) }}
+
+        <h1>Items with have=0</h1>
+        {{ render_table(table_have_0,stats_group) }}
+
+
     </body>
 </html>
