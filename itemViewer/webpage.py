@@ -1,6 +1,7 @@
-from flask import Flask, render_template, g
+from flask import Flask, render_template, g, jsonify
 import sqlite3
 import os
+import traceback
 
 # absFilePath = os.path.abspath(__file__)
 # os.chdir( os.path.dirname(absFilePath) )
@@ -8,11 +9,43 @@ import os
 # Configuration
 DATABASE = 'items.db'
 
+# stats_group = [
+#     ["Watchful", "Shadowy", "Dangerous", "Persuasive"],
+#     ["Bizarre", "Dreaded", "Respectable"],
+#     ["A_Player_of_Chess", "Artisan_of_the_Red_Science", "Glasswork", "Kataleptic_Toxicology", "Mithridacy", "Monstrous_Anatomy", "Shapeling_Arts", "Zeefaring", "Neathproofed", "Steward_of_the_Discordance"]
+# ]
+
+# Basic Variables
+main_stats = ["Watchful", "Shadowy", "Dangerous", "Persuasive"]
+rep_stats = ["Bizarre", "Dreaded", "Respectable"]
+advanced_stats= ["A_Player_of_Chess", "Artisan_of_the_Red_Science", "Glasswork", "Kataleptic_Toxicology", "Mithridacy", "Monstrous_Anatomy", "Shapeling_Arts", "Zeefaring", "Neathproofed", "Steward_of_the_Discordance"]
+menace_stats= ["Nightmares", "Scandal", "Suspicion", "Wounds"]
+old_stats=["Savage", "Elusive", "Baroque", "Cat_Upon_Your_Person"]
+# 25 groups in total
+stat_group = main_stats + rep_stats + advanced_stats + menace_stats + old_stats
+
+changeable_categories = ["Hat","Clothing","Gloves","Weapon","Boots","Companion","Affiliation","Transport","Home_Comfort"]
+static_categories = ["Spouse","Treasure","Destiny","Tools_of_the_Trade","Ship","Club"]
+all_categories = changeable_categories + static_categories
+
+item_type = ["have_item","free_item","all_item"]
+
+table_dictionary = {
+    "Changeable": {},
+    "Static":{}
+}
+
 app = Flask(__name__)
 app.config.from_object(__name__)
 
 def connect_db():
-    return sqlite3.connect(app.config['DATABASE'])
+    try:
+        return sqlite3.connect(DATABASE)
+    except sqlite3.Error as e:
+        print(f"Error connecting to database: {e}")
+        # Here, you can also return a custom error page to the user
+        return None
+
 
 @app.before_request
 def before_request():
@@ -23,103 +56,106 @@ def teardown_request(exception):
     if hasattr(g, 'db'):
         g.db.close()
 
-@app.route('/')
-def show_items():
-    stats_group = [
-    ["Watchful", "Shadowy", "Dangerous", "Persuasive"],
-    ["Bizarre", "Dreaded", "Respectable"],
-    ["A_Player_of_Chess", "Artisan_of_the_Red_Science", "Glasswork", "Kataleptic_Toxicology", "Mithridacy", "Monstrous_Anatomy", "Shapeling_Arts", "Zeefaring", "Neathproofed", "Steward_of_the_Discordance"]
-    ]
 
-
-    categories = ["Hat","Clothing","Gloves","Weapon","Boots","Companion","Affiliation","Transport","Home_Comfort"]
-
-    def create_table(have_value):
-        table_data = []
-        for category in categories:
-            row = [category]
-            for stat_group in stats_group:
-                for stat in stat_group:
-                    query = f"SELECT title, \"{stat}\" FROM items WHERE have = {have_value} AND category = '{category}' ORDER BY \"{stat}\" DESC LIMIT 1"
-                    cursor.execute(query)
-                    result = cursor.fetchone()
-                    if result:
-                        title, value = result
-                        print(f"Original title: {title}, Original value: {value}")  # Print original values
-                        if not value or value < 0: # Check if value is 0 or less than 0
-                            title = "-----"
-                            value = "0"
-                        row.extend([title or "", value or "0"])  # Use empty string or 0 if None
-                    else:
-                        row.extend(["None", "None"])
-            table_data.append(row)
-        return table_data
+def populate_dictionary(category, stat, have_value, fate_value, title, value, origin, icon):
+    """
+    Populates the table dictionary based on the category, stat, have_value, and fate_value.
+    """
+    #This is the basic item dictionary shared between all items.
+    item_dict = {
+        "item_name": title,
+        "value": value,
+        "origin": origin,
+        "icon": icon
+        }
     
+    if have_value == 1:
+        item_key = "have_item"
+        item_dict["color"] = ""  # This will be updated later when comparing values
+    elif fate_value == 0:
+        item_key = "free_item"
+    else:
+        item_key = "all_item"
+        
+    # Now, populate the table_dictionary
+    table_dictionary["Changeable" if category in changeable_categories else "Static"][category][stat][item_key] = item_dict
 
+def create_table(have_value=None, fate_value=None, compare_table=None):
     # Connect to the database
     conn = sqlite3.connect(DATABASE)
     cursor = conn.cursor()
 
-    # Create tables
-    table_have_1 = create_table(have_value=1)
-    table_have_0 = create_table(have_value=0)
+    try:
+        for category in all_categories:
+            for stat in stat_group:
+                query = f"SELECT title, \"{stat}\", origin, icon FROM items WHERE category = '{category}'"
+                if have_value is not None:
+                    query += f" AND have = {have_value}"
+                elif fate_value is not None:
+                    query += f" AND fate = {fate_value}"
+                query += f" ORDER BY \"{stat}\" DESC LIMIT 1"
 
-    conn.close()
+                try:
+                    cursor.execute(query)
+                except sqlite3.Error as e:
+                    print(f"SQL error: {e}")
+                    # Handle the error appropriately. Maybe continue to the next iteration or exit the function.
 
-    return render_template('fl_items.html',
-                            table_have_1=table_have_1, 
-                            table_have_0=table_have_0, 
-                            stats_group=stats_group)
+                result = cursor.fetchone()
 
-# def show_items():
+                if result:
+                    title, value, origin, icon = result
+                    if not value and have_value:
+                        title = "----"
+                        value = 0
+                    populate_dictionary(category, stat, have_value, fate_value, title, value, origin, icon)
+    except sqlite3.Error as e:
+        print(f"SQL error: {e}")
+    finally:
+        conn.close()
 
-#     # base_stats = ["Watchful", "Shadowy", "Dangerous", "Persuasive"]
-#     # bdr_stats = ["Bizarre", "Dreaded", "Respectable"]
-#     # magcats_stats= ["A Player of Chess", "Artisan of the Red Science", "Glasswork", "Kataleptic Toxicology", "Mithridacy", "Monstrous Anatomy", "Shapeling Arts", "Zeefaring", "Neathproofed", "Steward of the Discordance"]
-#     # menace_stats= ["Nightmares", "Scandal", "Suspicion", "Wounds"]
-#     # old_stats=["Savage!", "Elusive!", "Baroque!", "Cat Upon Your Person"]
-
-#     # all_stats = [base_stats, bdr_stats, magcats_stats, menace_stats, old_stats]
-
-#     categories = ["Hat","Clothing","Gloves","Weapon","Boots","Companion","Affiliation","Transport","Home_Comfort"]
-#     # unchangeable_categories = ["Spouse","Treasure","Destiny","Tools_of_the_Trade","Ship","Club"]
-
-#     # all_categories = [categories, unchangeable_categories]
-
-#     data_have = {}
-#     data_fate_0 = {}
-#     data_fate_1 = {}
-
-#     data = {}
-
-#     for stats_group in stats_groups:
-#         for stat in stats_group:
-#             for category in categories:
-#                 # Query for have=1
-#                 query_have = f"SELECT title, MAX(\"{stat}\") FROM items WHERE have = 1 AND category = '{category}'"
-#                 result_have = g.db.execute(query_have).fetchone()
-#                 data_have.setdefault(stat, []).append(result_have)
-
-#                 # Query for fate=0
-#                 query_fate_0 = f"SELECT title, MAX(\"{stat}\") FROM items WHERE fate = 0 AND category = '{category}'"
-#                 result_fate_0 = g.db.execute(query_fate_0).fetchone()
-#                 data_fate_0.setdefault(stat, []).append(result_fate_0)
-
-#                 # Query for fate=1
-#                 query_fate_1 = f"SELECT title, MAX(\"{stat}\") FROM items WHERE fate = 1 AND category = '{category}'"
-#                 result_fate_1 = g.db.execute(query_fate_1).fetchone()
-#                 data_fate_1.setdefault(stat, []).append(result_fate_1)
+@app.route('/')
+def show_items():
+    try:
+        for category in changeable_categories + static_categories:
+            if category in static_categories:
+                table_dictionary["Static"][category] = {}
+                table_top_category = table_dictionary["Static"][category]
+                print(f"{category} is in Static")
+            else:
+                table_dictionary["Changeable"][category] = {}
+                table_top_category  = table_dictionary["Changeable"][category]
+                print(f"{category} is in Changeable")
+            
+            # table_umbrella[category] = {}
+            for stat in (stat_group):
+                table_top_category[stat] = {}
+                for item in item_type:
+                    table_top_category[stat][item] = {
+                        "item_name" : "",
+                        "value" : 0,
+                        "origin" : "",
+                        "icon" : ""
+                    }
+                table_top_category[stat]["have_item"]["color"] = ""
 
 
-#     return render_template(
-#         'fl_items.html',
-#         all_stats=stats_groups,
-#         # all_categories=all_categories,
-#         data_have=data_have,
-#         data_fate_0=data_fate_0,
-#         data_fate_1=data_fate_1,
-#         zip=zip
-#     )
+        # TODO: Add logic to compare tables and update the 'color' value in the dictionary
+        # Populate the dictionary
+        create_table()  # For all_items
+        create_table(have_value=1)  # For have_item
+        create_table(fate_value=0)  # For free_item
+        # print(table_dictionary)
+
+        # TODO: Update the Flask template to render data from the dictionary instead of the table list.
+        return render_template('fl_items.html', 
+                                table_dictionary=table_dictionary,
+                                all_categories=all_categories,
+                                stat_group=stat_group)
+    except Exception as e:
+        print(f"Error in show_items: {e}")
+        print(traceback.format_exc())
+        return "An error occurred while processing your request."
 
 if __name__ == '__main__':
     app.run(debug=True)

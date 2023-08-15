@@ -1,26 +1,4 @@
-{% macro render_table2(table_data,stats_group) %}
-    <table>
-        <tr>
-            <th>Category</th>
-            {% for group in stats_group %}
-                {% for stat in group %}
-                    <th>{{ stat }} Title</th>
-                    <th>{{ stat }}</th>
-                {% endfor %}
-            {% endfor %}
-        </tr>
-        {% for row in table_data %}
-            <tr>
-                {% for cell in row %}
-                    <td>{{ cell }}</td>
-                {% endfor %}
-            </tr>
-        {% endfor %}
-    </table>
-    <hr>
-{% endmacro %}
-
-{% macro render_table(table_data, stats_group) %}
+<!-- {% macro render_table_old(table_data, stats_group) %}
     <table class="table">
         <tr>
             <th rowspan="2">Category</th>
@@ -39,10 +17,56 @@
         {% for row in table_data %}
             <tr>
                 {% for cell in row %}
-                <td {% if loop.index is odd %} class="value-column"{% endif %}>{{ cell }}</td>
+                    {% if row[0] == "Total" and loop.index > 1 %}
+                        <td colspan="2">{{ cell }}</td>
+                    {% else %}
+                        <td {% if loop.index is even and cell[1] %} class="{{ cell[1] }}"{% endif %}>
+                            {{ cell[0] if loop.index is odd else cell[0] }}
+                        </td>
+                    {% endif %}
                 {% endfor %}
             </tr>
         {% endfor %}
     </table>
     <hr>
+{% endmacro %} -->
+
+{% macro render_table(table_dictionary, stat_group, all_categories) %}
+    <table class="table">
+        <thead>
+            <tr>
+                <th rowspan="2">Category</th>
+                {% for stat in stat_group %}
+                    <th colspan="2">{{ stat|replace("_", " ") }}</th>
+                {% endfor %}
+            </tr>
+            <tr>
+                {% for stat in stat_group %}
+                    <th>Item</th>
+                    <th>Value</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for category in all_categories %}
+                <tr>
+                    <td>{{ category }}</td>
+                    {% for stat in stat_group %}
+                        {% if category in table_dictionary["Changeable"] %}
+                            {% set top_category = "Changeable" %}
+                        {% else %}
+                            {% set top_category = "Static" %}
+                        {% endif %}
+                        {% set current_stat = table_dictionary[top_category][category][stat] %}
+                        <td>
+                            {{ current_stat["have_item"]["item_name"] }}
+                        </td>
+                        <td {{ 'class=' + current_stat["have_item"]["color"] if "color" in current_stat["have_item"] else '' }}>{{ current_stat["have_item"]["value"] }}</td>
+                    {% endfor %}
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <hr>
 {% endmacro %}
+

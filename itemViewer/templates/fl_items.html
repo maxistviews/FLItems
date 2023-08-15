@@ -7,11 +7,9 @@
     </head>
     <body>
         <h1>Items with have=1</h1>
-        {{ render_table(table_have_1,stats_group) }}
+        {{ render_table(table_dictionary, stat_group, all_categories) }}
 
-        <h1>Items with have=0</h1>
-        {{ render_table(table_have_0,stats_group) }}
-
+        <pre>{{ table_dictionary|tojson(indent=2) }}</pre>
 
     </body>
 </html>
