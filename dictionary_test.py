@@ -12,9 +12,6 @@ old_stats=["Savage", "Elusive", "Baroque", "Cat_Upon_Your_Person"]
 # 25 groups in total
 
 stat_group = main_stats + rep_stats + advanced_stats + menace_stats + old_stats
-# stat_comma = main_stats,rep_stats,advanced_stats,menace_stats,old_stats
-
-# print(len(stat_group))
 
 changeable_categories = ["Hat","Clothing","Gloves","Weapon","Boots","Companion","Affiliation","Transport","Home_Comfort"]
 static_categories = ["Spouse","Treasure","Destiny","Tools_of_the_Trade","Ship","Club"]
@@ -26,66 +23,6 @@ table_dictionary = {
     "Static":{}
 }
 
-# table_dictionary_ref = {
-#     "Changeable": {
-#         "Hat" : {
-#             "Watchful": {
-#                 # Top item in this category in the database that has have=1
-#                 "have":{
-#                     "item_name" : "",
-#                     "value" : 0,
-#                     "origin" : "",
-#                     "icon" : "",
-#                     "color" : ""
-#                 },
-#                 # Top item in this category in the database that has fate=0
-#                 "free_items": {
-#                     "item_name" : "",
-#                     "value" : 0,
-#                     "origin" : "",
-#                     "icon" : ""
-#                 },
-#                 # Top item in this category in the database, no matter the fate.
-#                 "all_items": {
-#                     "item_name" : "",
-#                     "value" : 0,
-#                     "origin" : "",
-#                     "icon" : ""
-#                 }
-#             }
-#         }
-#     },
-#     "Static": {
-#         "Spouse" : {
-#             "Watchful": {
-#                 # Top item in this category in the database that has have=1
-#                 "have":{
-#                     "item_name" : "",
-#                     "value" : 0,
-#                     "origin" : "",
-#                     "icon" : "",
-#                     "color" : ""
-#                 },
-#                 # Top item in this category in the database that has fate=0
-#                 "free_items": {
-#                     "item_name" : "",
-#                     "value" : 0,
-#                     "origin" : "",
-#                     "icon" : ""
-#                 },
-#                 # Top item in this category in the database, no matter the fate.
-#                 "free_items": {
-#                     "item_name" : "",
-#                     "value" : 0,
-#                     "origin" : "",
-#                     "icon" : ""
-#                 }
-#             }
-#         }
-#     }
-# }
-
-# First time this runs, is_static = False. Second time, its true.
 for category in changeable_categories + static_categories:
     if category in static_categories:
         table_dictionary["Static"][category] = {}
@@ -107,5 +44,3 @@ for category in changeable_categories + static_categories:
                 "icon" : ""
             }
         table_top_category[stat]["have_item"]["color"] = ""
-
-print(len(table_dictionary))
