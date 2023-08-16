@@ -21,9 +21,10 @@ td {
     /* height: 60px; */ /* adjust as needed */
 }
 
+
 tr {
-    height: 60px; /* adjust as needed */
-}
+    /* height: 60px; adjust as needed */
+} 
 
 .value-column {
     border-right: 1px solid #c3c3c3;
