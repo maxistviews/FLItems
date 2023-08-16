@@ -1,5 +1,6 @@
-from flask import Flask, render_template, g, jsonify
+from flask import Flask, current_app, render_template, g, jsonify
 import sqlite3
+import requests
 import os
 import traceback
 
@@ -15,21 +16,52 @@ DATABASE = 'items.db'
 #     ["A_Player_of_Chess", "Artisan_of_the_Red_Science", "Glasswork", "Kataleptic_Toxicology", "Mithridacy", "Monstrous_Anatomy", "Shapeling_Arts", "Zeefaring", "Neathproofed", "Steward_of_the_Discordance"]
 # ]
 
-# Basic Variables
-main_stats = ["Watchful", "Shadowy", "Dangerous", "Persuasive"]
-main_icons = ["owl.png","bear.png","cat.png","wolf.png"]
-rep_stats = ["Bizarre", "Dreaded", "Respectable"]
-rep_icons = ["sidebarbizarre.png","sidebardreaded.png","sidebarrespectable.png"]
-advanced_stats= ["A_Player_of_Chess", "Artisan_of_the_Red_Science", "Glasswork", "Kataleptic_Toxicology", "Mithridacy", "Monstrous_Anatomy", "Shapeling_Arts", "Zeefaring", "Neathproofed", "Steward_of_the_Discordance"]
-advanced_icons=["chesspiece.png","dawnmachine.png","mirror.png", "honeyjar.png", "snakehead2.png", "tentacle.png", "amber2.png", "captainhat.png", "snowflake.png", "black.png"]
-menace_stats= ["Nightmares", "Scandal", "Suspicion", "Wounds"]
-menace_icons= ["sidebarnightmares.png", "sidebarscandal.png", "sidebarsuspicion.png", "sidebarwounds.png"]
-old_stats=["Savage", "Elusive", "Baroque", "Cat_Upon_Your_Person"]
-old_icons=["sidebarsavage.png", "sidebarelusive.png", "sidebarbaroque.png", "placeholder2.png"]
 
-# 25 groups in total
-stat_group = main_stats + rep_stats + advanced_stats + menace_stats + old_stats
-icon_group = main_icons + rep_icons + advanced_icons + menace_icons + old_icons
+# Basic Variables
+# https://images.fallenlondon.com/icons/owlsmall.png
+icon_folder = "itemViewer/static/icons/"
+
+stat_group = {
+    "Watchful":"owlsmall.png",
+    "Shadowy":"bearsmall.png",
+    "Dangerous":"catsmall.png",
+    "Persuasive":"foxsmall.png",
+    "Bizarre":"sidebarbizarresmall.png",
+    "Dreaded":"sidebardreadedsmall.png",
+    "Respectable":"sidebarrespectablesmall.png",
+    "A_Player_of_Chess":"chesspiecesmall.png",
+    "Artisan_of_the_Red_Science":"dawnmachinesmall.png",
+    "Glasswork":"mirrorsmall.png",
+    "Kataleptic_Toxicology":"honeyjarsmall.png",
+    "Mithridacy":"snakehead2small.png",
+    "Monstrous_Anatomy":"tentaclesmall.png",
+    "Shapeling_Arts":"tentaclesmall.png",
+    "Zeefaring":"tentaclesmall.png",
+    "Neathproofed":"snowflakesmall.png",
+    "Steward_of_the_Discordance":"blacksmall.png",
+    "Nightmares":"sidebarnightmaressmall.png",
+    "Scandal":"sidebarscandalsmall.png",
+    "Suspicion":"sidebarscandalsmall.png",
+    "Wounds":"sidebarscandalsmall.png",
+    "Savage":"sidebarsavagesmall.png",
+    "Elusive":"sidebarelusivesmall.png",
+    "Baroque":"sidebarbaroquesmall.png",
+    "Cat_Upon_Your_Person":"placeholder2small.png"
+}
+# main_stats = ["Watchful", "Shadowy", "Dangerous", "Persuasive"]
+# main_icons = ["owl.png","bear.png","cat.png","wolf.png"]
+# rep_stats = ["Bizarre", "Dreaded", "Respectable"]
+# rep_icons = ["sidebarbizarre.png","sidebardreaded.png","sidebarrespectable.png"]
+# advanced_stats= ["A_Player_of_Chess", "Artisan_of_the_Red_Science", "Glasswork", "Kataleptic_Toxicology", "Mithridacy", "Monstrous_Anatomy", "Shapeling_Arts", "Zeefaring", "Neathproofed", "Steward_of_the_Discordance"]
+# advanced_icons=["chesspiece.png","dawnmachine.png","mirror.png", "honeyjar.png", "snakehead2.png", "tentacle.png", "amber2.png", "captainhat.png", "snowflake.png", "black.png"]
+menace_stats= ["Nightmares", "Scandal", "Suspicion", "Wounds"]
+# menace_icons= ["sidebarnightmares.png", "sidebarscandal.png", "sidebarsuspicion.png", "sidebarwounds.png"]
+# old_stats=["Savage", "Elusive", "Baroque", "Cat_Upon_Your_Person"]
+# old_icons=["sidebarsavage.png", "sidebarelusive.png", "sidebarbaroque.png", "placeholder2.png"]
+
+# # 25 groups in total
+# stat_group = main_stats + rep_stats + advanced_stats + menace_stats + old_stats
+# icon_group = main_icons + rep_icons + advanced_icons + menace_icons + old_icons
 
 changeable_categories = ["Hat","Clothing","Gloves","Weapon","Boots","Companion","Affiliation","Transport","Home_Comfort"]
 static_categories = ["Spouse","Treasure","Destiny","Tools_of_the_Trade","Ship","Club"]
@@ -63,6 +95,33 @@ def teardown_request(exception):
     if hasattr(g, 'db'):
         g.db.close()
 
+def smallify_icons(icon):
+    # This function takes the icon name and adds small before.png ex: owl.png and makes it owlsmall.png
+    # Split the filename from its extension
+    base_name, extension = icon.rsplit('.', 1)
+    
+    # Append 'small' to the base_name
+    smallified_name = f"{base_name}small.{extension}"
+
+    return smallified_name
+
+def download_icon(icon):
+    # First open /static/icons and check if the file already exists there, if not, download the icon from: https://images.fallenlondon.com/icons/{icon}
+    icon_path = icon_folder + icon
+    
+    # Check if the icon already exists
+    if not os.path.exists(icon_path):
+        # If not, download the icon
+        print(f"Downloading {icon}")
+        icon_url = f"https://images.fallenlondon.com/icons/{icon}"
+        response = requests.get(icon_url)
+        
+        # Check if the request was successful
+        if response.status_code == 200:
+            with open(icon_path, 'wb') as f:
+                f.write(response.content)
+        else:
+            print(f"Failed to download {icon_url}. Status code: {response.status_code}")
 
 def populate_dictionary(category, stat, have_value, fate_value, title, value, origin, icon):
     """
@@ -112,10 +171,26 @@ def create_table(have_value=None, fate_value=None, compare_table=None):
 
                 if result:
                     title, value, origin, icon = result
-                    if not value and have_value:
+                    icon = smallify_icons(icon)
+                    if not value or value <= 0:
+                        icon = "blanksmall.png"
                         title = "----"
+                        origin = ""
                         value = 0
+                    #Now that it is iconsmall.png, lets download it:
+                    download_icon(icon)
                     populate_dictionary(category, stat, have_value, fate_value, title, value, origin, icon)
+                    
+
+                if not result:
+                    icon = "blanksmall.png"
+                    title = "----"
+                    origin = ""
+                    value = 0
+                    #Now that it is iconsmall.png, lets download it:
+                    download_icon(icon)
+                    populate_dictionary(category, stat, have_value, fate_value, title, value, origin, icon)
+
     except sqlite3.Error as e:
         print(f"SQL error: {e}")
     finally:
@@ -124,6 +199,10 @@ def create_table(have_value=None, fate_value=None, compare_table=None):
 @app.route('/')
 def show_items():
     try:
+        # download_icon("owlsmall.png")
+        for stat, icon in stat_group.items():
+            download_icon(icon)
+
         for category in changeable_categories + static_categories:
             if category in static_categories:
                 table_dictionary["Static"][category] = {}
@@ -158,6 +237,7 @@ def show_items():
         return render_template('fl_items.html', 
                                 table_dictionary=table_dictionary,
                                 all_categories=all_categories,
+                                icon_folder=icon_folder,
                                 stat_group=stat_group)
     except Exception as e:
         print(f"Error in show_items: {e}")

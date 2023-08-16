@@ -1,48 +1,18 @@
-<!-- {% macro render_table_old(table_data, stats_group) %}
-    <table class="table">
-        <tr>
-            <th rowspan="2">Category</th>
-            {% for stat_group in stats_group %}
-                <th colspan="{{ stat_group|length * 2 }}">{{ stat_group[0] }} - {{ stat_group[-1] }}</th>
-            {% endfor %}
-        </tr>
-        <tr>
-            {% for stat_group in stats_group %}
-                {% for stat in stat_group %}
-                    <th>{{ stat|replace("_", " ") }}</th>
-                    <th>Value</th>
-                {% endfor %}
-            {% endfor %}
-        </tr>
-        {% for row in table_data %}
-            <tr>
-                {% for cell in row %}
-                    {% if row[0] == "Total" and loop.index > 1 %}
-                        <td colspan="2">{{ cell }}</td>
-                    {% else %}
-                        <td {% if loop.index is even and cell[1] %} class="{{ cell[1] }}"{% endif %}>
-                            {{ cell[0] if loop.index is odd else cell[0] }}
-                        </td>
-                    {% endif %}
-                {% endfor %}
-            </tr>
-        {% endfor %}
-    </table>
-    <hr>
-{% endmacro %} -->
-
 {% macro render_table(table_dictionary, stat_group, all_categories) %}
     <table class="table">
         <thead>
             <tr>
                 <th rowspan="2">Category</th>
-                {% for stat in stat_group %}
+                {% for stat, icon in stat_group.items() %}
+                    {% set icon_path = 'icons/' + icon %}
+                    <th> <img class="header-icon" src="{{ url_for('static', filename=icon_path)}}" alt="{{stat}}"> </th>
+
                     <th colspan="2">{{ stat|replace("_", " ") }}</th>
                 {% endfor %}
             </tr>
             <tr>
                 {% for stat in stat_group %}
-                    <th>Item</th>
+                    <th colspan="2">Item</th>
                     <th>Value</th>
                 {% endfor %}
             </tr>
@@ -58,12 +28,18 @@
                             {% set top_category = "Static" %}
                         {% endif %}
                         {% set current_stat = table_dictionary[top_category][category][stat] %}
+                        {% set current_stat_value = current_stat["have_item"]["value"] %}
+
+                        {% set icon_path = 'icons/' + current_stat["have_item"]["icon"] %}
                         
-                        {% set class_title = table_dictionary[top_category][category][stat] %}
-                        <td {{ 'class=' + current_stat["have_item"]["item_name"] if "item_name" in current_stat["have_item"] else '' }}>
+                        <td> 
+                            <img class="{% if current_stat_value == 0 %} item-image-blank{%else%}item-image{% endif %}" src="{{ url_for('static', filename=icon_path) }}" alt="{{ stat }}">
+
+                        </td>
+                        <td class="item-text vertical-text">
                             {{ current_stat["have_item"]["item_name"] }}
                         </td>
-                        <td {{ 'class=' + current_stat["have_item"]["color"] if "color" in current_stat["have_item"] else '' }}>{{ current_stat["have_item"]["value"] }}</td>
+                        <td class="item-value" {{ 'class=' + current_stat["have_item"]["color"] if "color" in current_stat["have_item"] else '' }}>{{ current_stat["have_item"]["value"] }}</td>
                     {% endfor %}
                 </tr>
             {% endfor %}
@@ -71,4 +47,3 @@
     </table>
     <hr>
 {% endmacro %}
-

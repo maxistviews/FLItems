@@ -12,7 +12,7 @@ SKIP_ITEMS = {
 
 #Config
 OVERWRITE_ALL = True  # Set to False if you don't want to overwrite every database entry
-DEBUG_PRINT_API = False
+DEBUG_PRINT_API = True
 #List of categories to query the API
 api_categories = ["Category:Boon","Category:Hat","Category:Clothing","Category:Gloves","Category:Weapon","Category:Boots","Category:Companion","Category:Destiny","Category:Spouse","Category:Treasure","Category:Tools_of_the_Trade","Category:Affiliation","Category:Transport","Category:Home_Comfort","Category:Ship","Category:Club"]
 # api_categories = ["Category:Weapon"]
@@ -129,6 +129,10 @@ def extract_effects(page_content):
                         ID = None  # or some other default value
                 elif param_name == "Icon":
                     icon = str(param.value.strip())
+                    #Make the first letter lowercase
+                    if icon[0].isupper():
+                        icon = icon[0].lower() + icon[1:]
+                    icon = icon.replace(" ", "_")
                 elif param_name == "Origin":
                     origin = str(param.value.strip())
                 elif param_name == "Access":
@@ -164,15 +168,33 @@ def extract_effects(page_content):
                     match_effect_name = re.search(r"{{IL\|(.*?)}}", str(param.value))
                     if match_effect_name:
                         effect_name = match_effect_name.group(1)
+                        # Extract the effect value, which is the number after the "+/-" sign
+                        match_effect_value = re.search(r"([+-]?\d+)", str(param.value))
+                        if match_effect_value:
+                            effect_value = int(match_effect_value.group(1))
+                        else:
+                            # If you cant find it, then set to None. Shouldnt happen a lot.
+                            print(colored(f"ERROR: In {param_name} can't find value for {effect_name}","red"))
+                            effect_value = None
                     else:
-                        effect_name = None  # or some other default value
+                        # If not in IL format, check for Menace Effect format: '{{Menace Effect|MenaceName|increase/decrease|rate={value}}}'
+                        menace_effect_match = re.search(r"{{Menace Effect\|(.*?)\|(increase|decrease)?(\|rate=(\d+))?}}", str(param.value))
+                        if menace_effect_match:
+                            # Get name of the menace ["Nightmares", "Scandal", "Suspicion", "Wounds"]
+                            effect_name = menace_effect_match.group(1)
+                            # Check if thid matches the "increase/decrease". If nothing, assume decrease.
+                            action = menace_effect_match.group(2) or "decrease" 
+                            # In the future, we may get items that effect menaces more than just 10%, so this is here for that reason.
+                            rate = menace_effect_match.group(4)
 
-                    # Extract the effect value, which is the number after the "+" sign
-                    match_effect_value = re.search(r"([+-]?\d+)", str(param.value))
-                    if match_effect_value:
-                        effect_value = int(match_effect_value.group(1))
-                    else:
-                        effect_value = None  # or some other default value
+                            if rate:  # if rate is provided, use it as the effect value
+                                effect_value = int(rate)
+                            else:
+                                # If the action was increase, then value is 10. If decrease, then -10.
+                                effect_value = 10 if action == "increase" else -10
+                        else:
+                            print(colored(f"ERROR: In {param_name} can't find the name or value","red"))
+                            effect_name = effect_value = None
 
                     if effect_name:
                         effects[effect_name] = effect_value

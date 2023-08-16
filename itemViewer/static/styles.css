@@ -7,13 +7,63 @@
 tr:nth-child(even) {
     background-color: #e2e2e2;
 }
+
+
+
 .table {
     border-spacing: 0;
     /* border-right: red; */
+    border: solid 2px;
+    table-layout: fixed;
 }
 
-/* td {} */
+td {
+    /* height: 60px; */ /* adjust as needed */
+}
+
+tr {
+    height: 60px; /* adjust as needed */
+}
 
 .value-column {
     border-right: 1px solid #c3c3c3;
+}
+
+.header-icon {
+    /* max-width: 1px; */
+    width: 40px;
+}
+
+.item-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: normal;
+    max-height: 2.5em;  /* Adjust depending on your line-height and desired spacing */
+    line-height: 1.2em; /* Adjust to your preferred line height */
+    display: -webkit-box;
+    -webkit-line-clamp: 2; /* limits to 2 lines */
+    -webkit-box-orient: vertical;
+    width: 150px; /* adjust as needed */
+    vertical-align: middle;
+    /* height: 54px; */
+    padding-top: 10%;
+}
+
+.item-image, .item-image-blank {
+    width: 40px;
+}
+
+.item-image-blank {
+    filter:grayscale(1);
+}
+
+/* .centered-text {
+    text-align: center;
+    vertical-align: middle;
+} */
+
+.vertical-text{
+    /* text-align: center; */
+    /* vertical-align: middle; */
+    /* height: 20px; */
 }
