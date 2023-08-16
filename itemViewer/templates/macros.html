@@ -58,7 +58,9 @@
                             {% set top_category = "Static" %}
                         {% endif %}
                         {% set current_stat = table_dictionary[top_category][category][stat] %}
-                        <td>
+                        
+                        {% set class_title = table_dictionary[top_category][category][stat] %}
+                        <td {{ 'class=' + current_stat["have_item"]["item_name"] if "item_name" in current_stat["have_item"] else '' }}>
                             {{ current_stat["have_item"]["item_name"] }}
                         </td>
                         <td {{ 'class=' + current_stat["have_item"]["color"] if "color" in current_stat["have_item"] else '' }}>{{ current_stat["have_item"]["value"] }}</td>
