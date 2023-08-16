@@ -1,0 +1,18 @@
+{% from 'macros.html' import render_table %}
+<!doctype html>
+<html>
+    <head>
+        <title>Items</title>
+        <link rel="stylesheet" href="/static/styles.css" />
+    </head>
+    <body>
+        <h1>Items with have=1</h1>
+        {{ render_table(table_dictionary, stat_group, all_categories) }}
+
+        <!-- {% set icon_path = icon_folder + '/' + 'owlsmall.png' %}
+        <img src="{{ url_for('static', filename=icon_path)}}" alt="Test"> -->
+
+        <pre>{{ table_dictionary|tojson(indent=2) }}</pre>
+
+    </body>
+</html>

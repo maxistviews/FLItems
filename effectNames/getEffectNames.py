@@ -37,11 +37,11 @@ def get_effect_names():
         else:
             break
     
-    #Adds the menaces that can also be modified by clothing
+    # Adds the menaces that can also be modified by clothing
     effect_names.extend(['Nightmares','Scandal','Suspicion','Wounds'])
 
     # Write the list of effect names to a file
-    with open('effect_names.json', 'w') as f:
+    with open('effectNames.json', 'w') as f:
         json.dump(effect_names, f)
 
 

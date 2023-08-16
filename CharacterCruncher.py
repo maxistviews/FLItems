@@ -2,6 +2,7 @@ import sqlite3
 import json
 import os
 
+# Put your character.json into the directory beside this file and run it.
 
 absFilePath = os.path.abspath(__file__)
 os.chdir( os.path.dirname(absFilePath) )
@@ -13,6 +14,9 @@ cursor = conn.cursor()
 # Set all the "have" values to 0
 cursor.execute("UPDATE items SET have = 0")
 print("Reset all 'have' values to 0.")
+
+errorWrite = 0
+dashes = "=========================================\n"
 
 # Load the JSON data
 with open('character.json') as f:
@@ -45,16 +49,22 @@ for i in range(47, possessions_end):
                 print("Updated ID" + str(item_id) + ": " + item_name)
             else:
                 print(f"ERROR: Item {check_item_name[0]} in the database doesn't line up with Item {item_name}")
+                errorWrite += 1
         else:
             cursor.execute(f"UPDATE items SET have = 1 WHERE ID = {item_id}")
-            print("=========================================")
-            print("ERROR: ID" + str(item_id) + ": " + item_name)
-            print("ERROR: Does not match the name in the database: " + str(check_item_name))
-            print("=========================================")
+            print(dashes + "ERROR: ID" + str(item_id) + ": " + item_name)
+            print("ERROR: Does not match the name in the database: " + str(check_item_name) + dashes)
+            errorWrite += 1
 
     # The `fetchone()` function returns a tuple representing a row from the SQL query results, even if that row only contains a single column. So `result[0]` is used to extract the first (and only) column from that row, which in this case is the `title` of the item from the database.
     # On the other hand, if `result` is `None` (i.e., no row was found in the database that matches the ID), we can't use indexing to extract a column from it, because `None` is not a tuple. In this case, we're converting `result` to a string to print it out, which will just print the string "None". 
     # In summary, `result[0]` is used when a matching row is found in the database and we want to extract the `title` from that row, while `str(result)` is used when no matching row is found and we want to print out "None" to indicate that no match was found.
+
+
+if errorWrite > 0:
+    print(f"\n\nCompleted ingesting character.json. Error(s) encountered: {errorWrite}")
+else:
+    print(f"\n\nCompleted ingesting character.json.")
 
 # Commit the changes and close the connection
 conn.commit()
