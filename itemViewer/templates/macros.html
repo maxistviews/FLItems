@@ -1,26 +1,42 @@
-{% macro render_table(table_dictionary, stat_group, all_categories) %}
+{% macro render_table(table_dictionary, stat_group, all_categories,totals) %}
     <table class="table">
         <thead>
+            <!-- ROW 1: Category and the Stat Names -->
             <tr>
-                <th rowspan="2">Category</th>
+                <!-- <th><div class="header-category">Category</div></th> -->
+                <th class="header-category">Category</th>
+
                 {% for stat, icon in stat_group.items() %}
                     {% set icon_path = 'icons/' + icon %}
+
+                    <!-- Header Icons -->
                     <th> <img class="header-icon" src="{{ url_for('static', filename=icon_path)}}" alt="{{stat}}"> </th>
 
-                    <th colspan="2">{{ stat|replace("_", " ") }}</th>
+                    <!-- Header Stat Names -->
+                    <!-- <th colspan="2" ><div class="header-statname">{{ stat|replace("_", " ") }}</div></th> -->
+                    <th colspan="2" ><p class="header-statname">{{ stat|replace("_", " ") }}</p></th>
                 {% endfor %}
             </tr>
+            <!-- ROW 2: All the item/Value pairs. -->
             <tr>
+                <!-- This is under Category just to give spacing -->
+                <th></th>
+
+                <!-- Each of the Item/Value pairs  -->
                 {% for stat in stat_group %}
                     <th colspan="2">Item</th>
-                    <th>Value</th>
+                    <!-- <th>Value</th> -->
+                    <th>{{totals[stat]}}</th>
                 {% endfor %}
             </tr>
         </thead>
+        <!-- Body of the table. Meat and Potatoes, if you will. -->
         <tbody>
             {% for category in all_categories %}
                 <tr>
-                    <td>{{ category }}</td>
+                    <!-- First Column, remove the underscores. -->
+                    <th><div class="sideheader-category">{{ category|replace("_", " ") }}</div></th>
+
                     {% for stat in stat_group %}
                         {% if category in table_dictionary["Changeable"] %}
                             {% set top_category = "Changeable" %}

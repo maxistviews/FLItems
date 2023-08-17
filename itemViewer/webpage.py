@@ -48,16 +48,12 @@ stat_group = {
     "Baroque":"sidebarbaroquesmall.png",
     "Cat_Upon_Your_Person":"placeholder2small.png"
 }
+totals = {stat: 0 for stat in stat_group}
 # main_stats = ["Watchful", "Shadowy", "Dangerous", "Persuasive"]
-# main_icons = ["owl.png","bear.png","cat.png","wolf.png"]
 # rep_stats = ["Bizarre", "Dreaded", "Respectable"]
-# rep_icons = ["sidebarbizarre.png","sidebardreaded.png","sidebarrespectable.png"]
 # advanced_stats= ["A_Player_of_Chess", "Artisan_of_the_Red_Science", "Glasswork", "Kataleptic_Toxicology", "Mithridacy", "Monstrous_Anatomy", "Shapeling_Arts", "Zeefaring", "Neathproofed", "Steward_of_the_Discordance"]
-# advanced_icons=["chesspiece.png","dawnmachine.png","mirror.png", "honeyjar.png", "snakehead2.png", "tentacle.png", "amber2.png", "captainhat.png", "snowflake.png", "black.png"]
 menace_stats= ["Nightmares", "Scandal", "Suspicion", "Wounds"]
-# menace_icons= ["sidebarnightmares.png", "sidebarscandal.png", "sidebarsuspicion.png", "sidebarwounds.png"]
 # old_stats=["Savage", "Elusive", "Baroque", "Cat_Upon_Your_Person"]
-# old_icons=["sidebarsavage.png", "sidebarelusive.png", "sidebarbaroque.png", "placeholder2.png"]
 
 # # 25 groups in total
 # stat_group = main_stats + rep_stats + advanced_stats + menace_stats + old_stats
@@ -73,6 +69,7 @@ table_dictionary = {
     "Changeable": {},
     "Static":{}
 }
+
 
 app = Flask(__name__)
 app.config.from_object(__name__)
@@ -154,7 +151,9 @@ def create_table(have_value=None, fate_value=None, compare_table=None):
     try:
         for category in all_categories:
             for stat in stat_group:
+
                 query = f"SELECT title, \"{stat}\", origin, icon FROM items WHERE category = '{category}'"
+
                 if have_value is not None:
                     query += f" AND have = {have_value}"
                 elif fate_value is not None:
@@ -179,8 +178,9 @@ def create_table(have_value=None, fate_value=None, compare_table=None):
                         value = 0
                     #Now that it is iconsmall.png, lets download it:
                     download_icon(icon)
+                    if have_value is not None:
+                        totals[stat] += value
                     populate_dictionary(category, stat, have_value, fate_value, title, value, origin, icon)
-                    
 
                 if not result:
                     icon = "blanksmall.png"
@@ -238,7 +238,8 @@ def show_items():
                                 table_dictionary=table_dictionary,
                                 all_categories=all_categories,
                                 icon_folder=icon_folder,
-                                stat_group=stat_group)
+                                stat_group=stat_group,
+                                totals=totals)
     except Exception as e:
         print(f"Error in show_items: {e}")
         print(traceback.format_exc())

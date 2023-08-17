@@ -2,22 +2,30 @@
 .green { color: green; }
 .blue { color: blue; }
 .yellow {color: yellow; }
+.backgroundold {color:#e2e2e2;}
+.backgroundFL {color: #bdb29e;}
 /* Add more classes as needed */
 
 tr:nth-child(even) {
-    background-color: #e2e2e2;
+    /* background-color: #bdb29e; */
+    background-image: url("https://images.fallenlondon.com/static/bg-paper.png");
 }
 
+.page-title{
+    font-family: "Roboto Slab",Georgia,Times,serif;
+}
 .table {
     border-spacing: 0;
     /* border-right: red; */
-    border: solid 2px;
+    border: solid 1px;
     table-layout: fixed;
 }
 
+.sideheader-category {
+}
+
 .div-center {
-    width: 11em;
-    vertical-align: middle;
+    /* vertical-align: middle; */
 }
 
 .item-text{
@@ -26,6 +34,9 @@ tr:nth-child(even) {
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     margin: 5%;
+}
+.item-value {
+    text-align: -webkit-center;
 }
 
 td {
@@ -38,6 +49,26 @@ tr {
     /* height: 60px; adjust as needed */
 } 
 
+.header-category, .sideheader-category {
+    width: 6em;
+    /* margin: 5%; */
+    /* display: -webkit-box; */
+    /* -webkit-box-align: center; */
+    /* column-width: 1000px; */
+    /* color: red; */
+}
+
+.sideheader-category{
+}
+
+/* Header should be 11em*/
+.header-statname{
+    /* font-size: 0.1em; */
+    width: 11em;
+    margin: 0;
+    word-wrap: break-word;
+}
+
 .value-column {
     border-right: 1px solid #552929;
 }
@@ -48,26 +79,19 @@ tr {
 }
 
 
-.item-text2 {
-    /* text-overflow: ellipsis; */
-    /* white-space: nowrap; */
-    /* max-height: 2.5em; */  /* Adjust depending on your line-height and desired spacing */
-    /* line-height: 1.2em; */ /* Adjust to your preferred line height */
-    display: flex;
-    /* -webkit-line-clamp: 2; */ /* limits to 2 lines */
-    /* -webkit-box-orient: vertical; */
-    width: 10em; /* adjust as needed */
-    /* vertical-align: middle; */
-    /* height: 54px; */
-    /* overflow: hidden; */
-}
+
 
 .item-image, .item-image-blank {
     width: 40px;
+    max-height: 40px;
 }
 
 .item-image-blank {
     filter:grayscale(1);
+}
+
+.item-text-blank {
+    opacity: 30%;
 }
 
 /* .centered-text {

@@ -6,13 +6,34 @@
         <link rel="stylesheet" href="/static/styles.css" />
     </head>
     <body>
-        <h1>Items with have=1</h1>
-        {{ render_table(table_dictionary, stat_group, all_categories) }}
-
-        <!-- {% set icon_path = icon_folder + '/' + 'owlsmall.png' %}
-        <img src="{{ url_for('static', filename=icon_path)}}" alt="Test"> -->
-
-        <pre>{{ table_dictionary|tojson(indent=2) }}</pre>
+        <h2>Test table</h2>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th> Category </th>
+                    <th> Icon </th>
+                    <th colspan="2" > Watchful </th>
+                </tr>
+                <tr>
+                    <th></th>
+                    <th colspan="2"> Item </th>
+                    <th> Value </th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>1</td>
+                    <td>2</td>
+                    <td class="item-text">Smock of Four Thousand Three Hundred and Eight Pockets</td>
+                    <td>4</td>
+                </tr>
+            </tbody>
+        </table>
+        <h1 class="page-title">Your Fallen London Inventory</h1>
+        {{ render_table(table_dictionary, stat_group, all_categories,totals) }}
+        
+        <pre>{{ totals|tojson(indent=2) }}</pre>
+        <!-- <pre>{{ table_dictionary|tojson(indent=2) }}</pre> -->
 
     </body>
 </html>
