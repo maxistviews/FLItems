@@ -8,8 +8,6 @@ tr:nth-child(even) {
     background-color: #e2e2e2;
 }
 
-
-
 .table {
     border-spacing: 0;
     /* border-right: red; */
@@ -17,8 +15,22 @@ tr:nth-child(even) {
     table-layout: fixed;
 }
 
+.div-center {
+    width: 11em;
+    vertical-align: middle;
+}
+
+.item-text{
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    margin: 5%;
+}
+
 td {
     /* height: 60px; */ /* adjust as needed */
+    /* vertical-align: middle; */
 }
 
 
@@ -27,7 +39,7 @@ tr {
 } 
 
 .value-column {
-    border-right: 1px solid #c3c3c3;
+    border-right: 1px solid #552929;
 }
 
 .header-icon {
@@ -35,19 +47,19 @@ tr {
     width: 40px;
 }
 
-.item-text {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: normal;
-    max-height: 2.5em;  /* Adjust depending on your line-height and desired spacing */
-    line-height: 1.2em; /* Adjust to your preferred line height */
-    display: -webkit-box;
-    -webkit-line-clamp: 2; /* limits to 2 lines */
-    -webkit-box-orient: vertical;
-    width: 150px; /* adjust as needed */
-    vertical-align: middle;
+
+.item-text2 {
+    /* text-overflow: ellipsis; */
+    /* white-space: nowrap; */
+    /* max-height: 2.5em; */  /* Adjust depending on your line-height and desired spacing */
+    /* line-height: 1.2em; */ /* Adjust to your preferred line height */
+    display: flex;
+    /* -webkit-line-clamp: 2; */ /* limits to 2 lines */
+    /* -webkit-box-orient: vertical; */
+    width: 10em; /* adjust as needed */
+    /* vertical-align: middle; */
     /* height: 54px; */
-    /* padding-top: 2%; */
+    /* overflow: hidden; */
 }
 
 .item-image, .item-image-blank {
@@ -62,9 +74,3 @@ tr {
     text-align: center;
     vertical-align: middle;
 } */
-
-.vertical-text{
-    /* text-align: center; */
-    /* vertical-align: middle; */
-    /* height: 20px; */
-}

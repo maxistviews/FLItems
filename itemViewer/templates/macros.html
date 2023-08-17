@@ -36,8 +36,10 @@
                             <img class="{% if current_stat_value == 0 %} item-image-blank{%else%}item-image{% endif %}" src="{{ url_for('static', filename=icon_path) }}" alt="{{ stat }}">
 
                         </td>
-                        <td class="item-text vertical-text">
-                            {{ current_stat["have_item"]["item_name"] }}
+                        <td>
+                            <div class="div-center">
+                            <p class="item-text">{{ current_stat["have_item"]["item_name"] }} </p>
+                            </div>
                         </td>
                         <td class="item-value" {{ 'class=' + current_stat["have_item"]["color"] if "color" in current_stat["have_item"] else '' }}>{{ current_stat["have_item"]["value"] }}</td>
                     {% endfor %}
