@@ -48,7 +48,9 @@ stat_group = {
     "Baroque":"sidebarbaroquesmall.png",
     "Cat_Upon_Your_Person":"placeholder2small.png"
 }
-totals = {stat: 0 for stat in stat_group}
+# totals = {stat: 0 for stat in stat_group}
+
+
 # main_stats = ["Watchful", "Shadowy", "Dangerous", "Persuasive"]
 # rep_stats = ["Bizarre", "Dreaded", "Respectable"]
 # advanced_stats= ["A_Player_of_Chess", "Artisan_of_the_Red_Science", "Glasswork", "Kataleptic_Toxicology", "Mithridacy", "Monstrous_Anatomy", "Shapeling_Arts", "Zeefaring", "Neathproofed", "Steward_of_the_Discordance"]
@@ -143,7 +145,7 @@ def populate_dictionary(category, stat, have_value, fate_value, title, value, or
     # Now, populate the table_dictionary
     table_dictionary["Changeable" if category in changeable_categories else "Static"][category][stat][item_key] = item_dict
 
-def create_table(have_value=None, fate_value=None, compare_table=None):
+def create_table(totals,have_value=None, fate_value=None, compare_table=None):
     # Connect to the database
     conn = sqlite3.connect(DATABASE)
     cursor = conn.cursor()
@@ -151,7 +153,6 @@ def create_table(have_value=None, fate_value=None, compare_table=None):
     try:
         for category in all_categories:
             for stat in stat_group:
-
                 query = f"SELECT title, \"{stat}\", origin, icon FROM items WHERE category = '{category}'"
 
                 if have_value is not None:
@@ -198,6 +199,7 @@ def create_table(have_value=None, fate_value=None, compare_table=None):
 
 @app.route('/')
 def show_items():
+    totals = {stat: 0 for stat in stat_group}
     try:
         # download_icon("owlsmall.png")
         for stat, icon in stat_group.items():
@@ -227,10 +229,10 @@ def show_items():
 
 
         # TODO: Add logic to compare tables and update the 'color' value in the dictionary
-        # Populate the dictionary
-        create_table()  # For all_items
-        create_table(have_value=1)  # For have_item
-        create_table(fate_value=0)  # For free_item
+        # Populate the dictionaries
+        create_table(totals)  # For all_items
+        create_table(totals,have_value=1)  # For have_item
+        create_table(totals,fate_value=0)  # For free_item
         # print(table_dictionary)
 
         # TODO: Update the Flask template to render data from the dictionary instead of the table list.
