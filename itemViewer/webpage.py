@@ -1,8 +1,9 @@
-from flask import Flask, current_app, render_template, g, jsonify
+from flask import Flask, current_app, render_template, request, redirect, g, jsonify, url_for, session
 import sqlite3
 import requests
 import os
 import traceback
+from colour import Color
 
 # absFilePath = os.path.abspath(__file__)
 # os.chdir( os.path.dirname(absFilePath) )
@@ -21,6 +22,7 @@ DATABASE = 'items.db'
 # https://images.fallenlondon.com/icons/owlsmall.png
 icon_folder = "itemViewer/static/icons/"
 
+# TODO: Include the stat groups as a seperate table in the SQL. 
 stat_group = {
     "Watchful":"owlsmall.png",
     "Shadowy":"bearsmall.png",
@@ -67,11 +69,20 @@ all_categories = changeable_categories + static_categories
 
 item_type = ["have_item","free_item","all_item"]
 
+# table_dictionary[top_category][category][stat]["have_item"]["value"]
+# table_dictionary[]
 table_dictionary = {
     "Changeable": {},
     "Static":{}
 }
 
+# Color block
+red = Color("red")
+color_list = list(red.range_to(Color("green"),11))
+
+color_dic = {}
+for i in range(len(color_list)):
+    color_dic[f"item-value-color-{i}"] = str(color_list[i])
 
 app = Flask(__name__)
 app.config.from_object(__name__)
@@ -103,6 +114,35 @@ def smallify_icons(icon):
     smallified_name = f"{base_name}small.{extension}"
 
     return smallified_name
+
+def set_colors(fate_value=None):
+    for category in all_categories:
+            for stat in stat_group:
+                if fate_value == 0:
+                    item_key = "free_item"
+                else:
+                    item_key = "all_item"
+
+                stat_shortcut = table_dictionary["Changeable" if category in changeable_categories else "Static"][category][stat]
+                compare_value = stat_shortcut[item_key]["value"]
+                have_value = stat_shortcut["have_item"]["value"]
+                # if have_value == 0:
+                #     have_value =1
+                # Divide the have_value by the compare value. This will give you a %. The closer to 100% (1.0), the closer to green you are.
+                if compare_value == 0:
+                    have_vs_compare = 10
+                else:
+                    have_vs_compare = round(have_value / compare_value * 10)
+                    if have_vs_compare >=11:
+                        have_vs_compare = 10
+
+                    # have_vs_compare = have_value % compare_value
+
+                stat_shortcut["have_item"]["color"] = f"item-value-color-{have_vs_compare}"
+
+                print(f"For {category} with: '{stat}' {have_value} / {compare_value} = {have_vs_compare}")
+                print(f"Assigned colour {str(color_list[have_vs_compare])} to it. {have_vs_compare}th color.")
+
 
 def download_icon(icon):
     # First open /static/icons and check if the file already exists there, if not, download the icon from: https://images.fallenlondon.com/icons/{icon}
@@ -146,6 +186,9 @@ def populate_dictionary(category, stat, have_value, fate_value, title, value, or
     table_dictionary["Changeable" if category in changeable_categories else "Static"][category][stat][item_key] = item_dict
 
 def create_table(totals,have_value=None, fate_value=None, compare_table=None):
+    """"""
+
+    """"""
     # Connect to the database
     conn = sqlite3.connect(DATABASE)
     cursor = conn.cursor()
@@ -209,11 +252,11 @@ def show_items():
             if category in static_categories:
                 table_dictionary["Static"][category] = {}
                 table_top_category = table_dictionary["Static"][category]
-                print(f"{category} is in Static")
+                #print(f"{category} is in Static")
             else:
                 table_dictionary["Changeable"][category] = {}
                 table_top_category  = table_dictionary["Changeable"][category]
-                print(f"{category} is in Changeable")
+                #print(f"{category} is in Changeable")
             
             # table_umbrella[category] = {}
             for stat in (stat_group):
@@ -235,6 +278,8 @@ def show_items():
         create_table(totals,fate_value=0)  # For free_item
         # print(table_dictionary)
 
+        set_colors(fate_value=0)
+
         # TODO: Update the Flask template to render data from the dictionary instead of the table list.
         return render_template('fl_items.html', 
                                 table_dictionary=table_dictionary,
@@ -246,6 +291,12 @@ def show_items():
         print(f"Error in show_items: {e}")
         print(traceback.format_exc())
         return "An error occurred while processing your request."
+    
+@app.route('/set_comparison', methods=['POST'])
+def set_comparison():
+    comparison_type = request.form.get('comparison_type')
+    session['comparison_type'] = comparison_type
+    return redirect(url_for('show_items'))
 
 if __name__ == '__main__':
     app.run(debug=True)

@@ -26,7 +26,7 @@
                 {% for stat in stat_group %}
                     <th colspan="2">Item</th>
                     <!-- <th>Value</th> -->
-                    <th>{{totals[stat]}}</th>
+                    <th class="header-totalvalue">{{totals[stat]}}</th>
                 {% endfor %}
             </tr>
         </thead>
@@ -46,18 +46,41 @@
                         {% set current_stat = table_dictionary[top_category][category][stat] %}
                         {% set current_stat_value = current_stat["have_item"]["value"] %}
 
-                        {% set icon_path = 'icons/' + current_stat["have_item"]["icon"] %}
+                        {% if current_stat == 0 %}
+                            {% set item_max_zero = "item-max-zero"  %}
+                        {% else %}
+                            {% set item_max_zero = ""  %}
+                        {% endif %}
                         
+                        {% set icon_path = 'icons/' + current_stat["have_item"]["icon"] %}
+
+                        {% set item_value_color = "color:" + current_stat["have_item"]["color"] %}
+                        
+
+                        <!-- Icon -->
                         <td> 
                             <img class="{% if current_stat_value == 0 %} item-image-blank{%else%}item-image{% endif %}" src="{{ url_for('static', filename=icon_path) }}" alt="{{ stat }}">
 
                         </td>
+                        <!-- Item Text, centered. -->
                         <td>
                             <div class="div-center">
-                            <p class="item-text">{{ current_stat["have_item"]["item_name"] }} </p>
+                            <p class="item-text {{item_max_zero}}">{{ current_stat["have_item"]["item_name"] }} </p>
                             </div>
                         </td>
-                        <td class="item-value" {{ 'class=' + current_stat["have_item"]["color"] if "color" in current_stat["have_item"] else '' }}>{{ current_stat["have_item"]["value"] }}</td>
+                        <!-- Make a set of classes instead that correspond to color values. -->
+                        <!-- <td class="item-value" style="{{item_value_color}}" > 
+                            {{ current_stat["have_item"]["value"] }}
+                            <div class="w3-border" style="color:gray">
+                                <div class="w3-grey" style="height:24px;width:40%"></div>
+                            </div>
+                        </td> -->
+                        <td > 
+                            <div class="item-value {{item_max_zero}} {{current_stat['have_item']['color']}}">{{ current_stat["have_item"]["value"] }}</div>
+                            <div class="w3-border" style="color:gray">
+                                <div class="w3-grey" style="height:24px;width:40%"></div>
+                            </div>
+                        </td>
                     {% endfor %}
                 </tr>
             {% endfor %}
