@@ -22,7 +22,8 @@ DATABASE = 'items.db'
 # https://images.fallenlondon.com/icons/owlsmall.png
 icon_folder = "itemViewer/static/icons/"
 
-# TODO: Include the stat groups as a seperate table in the SQL. 
+# TODO: Include the stat groups as a seperate table in the SQL with a column for "include"? Also "stat_type" = Main, reputation, etc.
+# Might be better than putting them all here?
 stat_group = {
     "Watchful":"owlsmall.png",
     "Shadowy":"bearsmall.png",
@@ -165,6 +166,8 @@ def download_icon(icon):
 def populate_dictionary(category, stat, have_value, fate_value, title, value, origin, icon):
     """
     Populates the table dictionary based on the category, stat, have_value, and fate_value.
+    TODO: Adjust this to only have a compare_item entry. Probaly replace the fate_value key also thats being passed.
+    update the functions to be "refresh_table" instead of create_table ?
     """
     #This is the basic item dictionary shared between all items.
     item_dict = {

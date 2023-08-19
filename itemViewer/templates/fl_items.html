@@ -9,14 +9,13 @@
     <body>
         <h1 class="page-title">Your Fallen London Inventory</h1>
 
+        Options:
         <form method="post" action="/set_comparison">
             <select name="comparison_type">
                 <option value="all_items">All Items</option>
                 <option value="free_items">Free Items</option>
             </select>
-            <input type="submit" value="Set Comparison">
         </form>
-        
         {{ render_table(table_dictionary, stat_group, all_categories,totals) }}
         
         <pre>{{ totals|tojson(indent=2) }}</pre>

@@ -35,7 +35,20 @@
             {% for category in all_categories %}
                 <tr>
                     <!-- First Column, remove the underscores. -->
-                    <th><div class="sideheader-category">{{ category|replace("_", " ") }}</div></th>
+                    <th>
+                        <div class="sideheader-category">
+                            {{ category|replace("_", " ") }}
+                            
+                            {% if category in table_dictionary["Static"] %}
+                                <form method="post" action="/set_comparison">
+                                    <select name="comparison_type">
+                                        <option value="all_items">All Items</option>
+                                        <option value="free_items">Free Items</option>
+                                    </select>
+                                </form>
+                            {% endif %}
+                        </div>
+                    </th>
 
                     {% for stat in stat_group %}
                         {% if category in table_dictionary["Changeable"] %}
