@@ -12,11 +12,13 @@ SKIP_ITEMS = {
 
 #Config
 OVERWRITE_ALL = True  # Set to False if you don't want to overwrite every database entry
-DEBUG_PRINT_API = False  # Set to True if you want to print the API response to the console
+DEBUG_ITEM_EFFECTS_EXTRACTION = True
+DEBUG_PRINT_API = True  # Set to True if you want to print the API response to the console
 
 #List of categories to query the API
 api_categories = ["Category:Boon","Category:Hat","Category:Clothing","Category:Gloves","Category:Weapon","Category:Boots","Category:Companion","Category:Destiny","Category:Spouse","Category:Treasure","Category:Tools_of_the_Trade","Category:Affiliation","Category:Transport","Category:Home_Comfort","Category:Ship","Category:Club"]
-# api_categories = ["Category:Ship"]
+# api_categories = ["Category:Home_Comfort"]
+api_categories = ["Category:Weapon"]
 # api_categories = ["Category:Companion"]
 
 dashes = "=========================================\n"
@@ -101,7 +103,7 @@ def extract_effects(page_content):
     effects = {}
     origin = None
     fate = False
-    have = False
+    # have = False
     shop = None
     access = None
     access_info = None
@@ -123,7 +125,10 @@ def extract_effects(page_content):
             for param in template.params:
                 # print(param)
                 param_name = param.name.strip()
-                if param_name == "ID":
+                # if the param_name is description, just continue to the next item.
+                if param_name == "Description" or param_name == "Item Type":
+                    continue
+                elif param_name == "ID":
                     if param.value.strip().isdigit():
                         ID = int(param.value.strip())
                     else:
@@ -140,9 +145,14 @@ def extract_effects(page_content):
                     access = str(param.value.strip())
                 elif param_name == "Access info":
                     access_info = str(param.value.strip()).replace(" (Guide)", "")  # Remove (Guide) if present
+                
                     # For some reason, the wiki is not consistent with the naming, so add the full name to this:
                     if access_info == "Feast of the Rose":
                         access_info = "Feast of the Exceptional Rose"
+
+                    # if the item is retired, from the access, then append "Retired" to the access info. First check if it starts with the word "Retired"
+                    if not access_info.startswith("Retired") and access == "Retired":
+                            access_info = "Retired: " + access_info
                 elif param_name == "Shop":
                     shop = str(param.value.strip())
                 elif param_name == "Rat Shop":
@@ -150,25 +160,21 @@ def extract_effects(page_content):
                 elif param_name == "Fate":
                     fate_value = str(param.value.strip()).lower()
                     fate = True if fate_value == "yes" else False
-                # Extract each of the "Effects", which are the stats
-                # elif param_name.startswith("Effects"):
-                #     # Extract the effect name from the value, removing any curly braces and pipe characters
-                #     effect_name = re.sub(r"[{}|]", "", param.value.split()[0])
-                #     # Remove the 'IL' prefix from the effect name
-                #     effect_name = re.sub(r"^IL", "", effect_name)
-                #     # Extract the effect value, which is the number after the "+" sign
-                #     match = re.search(r"([+-]?\d+)", str(param.value))
-                #     if match:
-                #         effect_value = int(match.group(1))
-                #     else:
-                #         effect_value = None  # or some other default value
-                #     effects[effect_name] = effect_value
 
-                elif param_name.startswith("Effects"):
+                # Extract each of the "Effects", which are the stats.
+
+                if param_name.startswith("Effects"):
                     # Find the portion of the string between {{IL| and }}
                     match_effect_name = re.search(r"{{IL\|(.*?)}}", str(param.value))
                     if match_effect_name:
-                        effect_name = match_effect_name.group(1)
+                        
+                        # Search for any weird characters at the end, like a |
+                        if match_effect_name.group(1).endswith("|"):
+                            if DEBUG_ITEM_EFFECTS_EXTRACTION: print(f"Removing | from {match_effect_name.group(1)}")
+                            effect_name = match_effect_name.group(1)[:-1]
+                        else:
+                            effect_name = match_effect_name.group(1)
+
                         # Extract the effect value, which is the number after the "+/-" sign
                         match_effect_value = re.search(r"([+-]?\d+)", str(param.value))
                         if match_effect_value:
@@ -202,6 +208,8 @@ def extract_effects(page_content):
 
 
             if access is not None:
+                if origin is not None:
+                    print(f"DEBUG: ORIGIN IS NOT NONE")
                 if access == "Festival":
                     if origin is not None:
                         origin = re.sub(r" \(Guide\)", "", origin)
@@ -213,10 +221,15 @@ def extract_effects(page_content):
                         origin = access_info
                     else:
                         origin = None
-                elif access == "Retired" or access == "Legacy":
+                elif access_info and access_info.startswith("Retired: "):
+                    origin = access_info
+                # elif access == "Retired" or access == "Legacy":
+                elif access == "Legacy":
+                    # If access_info exists, use that 
                     if access_info != None:
                         origin = str(access) + ": " + str(access_info)
                     else:
+                        print(f"Origin: " + str(origin) + " replaced with Access: " + access)
                         origin = access
                 elif access == "Location":
                     if access_info is not None:
@@ -233,9 +246,15 @@ def extract_effects(page_content):
             elif shop != None:
                 if origin is None:
                     origin =  "Shop: " + str(shop)
+
             for idx, category in enumerate(categories):
+                sanitized_category = category.replace("Category:", "").replace(" Items", "")
+                if sanitized_category in effect_names:
+                    continue
                 # Check for renown items
-                if category == "Category:Renown Items":
+                elif fate is False and category == "Fate":
+                    fate = True
+                elif category == "Category:Renown Items":
                     origin = "Renown Item"
                     # Check the next category for the faction name
                     faction_pattern = re.compile(r"Category:Faction: ([\w\s-]+)")
@@ -248,13 +267,11 @@ def extract_effects(page_content):
                 elif category in set(set_jobs):
                     origin = "Profession: " + category.replace("Category:", "")
                     break  # break once the job is found
-                elif category in effect_names:
-                    continue
 
                 # If category doesn't belong to unwanted ones, set the origin to that category
                 elif category not in unwanted_categories:
                     origin = category.replace("Category:", "")
-                    origin = origin.strip()
+                    origin = "Retired: " + origin.strip()
                     break  # break once a suitable origin is found
             
             #If there is still no origin, and its a Fate item, say fate?
@@ -264,10 +281,14 @@ def extract_effects(page_content):
             # # Add other categories and their corresponding origin values as needed
             # elif "Category:Some Other Category" in categories:
             #     origin = "Some Other Origin Value"
-
-    # Debugging origin
-    # print(f"DEBUG: Item origin: {origin}")
-    return effects, origin, fate, have, ID, icon
+    if DEBUG_ITEM_EFFECTS_EXTRACTION:
+        # Debugging origin
+        print(f"DEBUG: Item origin: {origin}")
+        print(f"DEBUG: Item access: {access}")
+        print(f"DEBUG: Item access_info: {access_info}")
+        print(f"DEBUG: Item fate: {fate}")
+        print(f"DEBUG: Item effects: {effects}")
+    return effects, origin, fate, ID, icon
 
 
 def sanitize_column_name(name):
@@ -374,7 +395,8 @@ def main():
             # If the page content was successfully retrieved
             if content_data:
                 # Extract the effects from the page content
-                effects, origin, fate, have, ID, icon = extract_effects(content_data)
+                effects, origin, fate, ID, icon = extract_effects(content_data)
+                have = None
                 db_id, db_page_id, db_last_update = None, None, None
                 # If we dont have the ID, skip this item.
                 if not ID:

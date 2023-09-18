@@ -141,7 +141,8 @@ def set_colors(fate_value=None):
 
                     # have_vs_compare = have_value % compare_value
 
-                stat_shortcut["have_item"]["color"] = color_dic[have_vs_compare]
+                stat_shortcut["have_item"]["color"] = color_dic[f'item-value-color-{have_vs_compare}']
+                
 
                 print(f"For {category} with: '{stat}' {have_value} / {compare_value} = {have_vs_compare}")
                 print(f"Assigned colour {str(color_list[have_vs_compare])} to it. {have_vs_compare}th color.")
