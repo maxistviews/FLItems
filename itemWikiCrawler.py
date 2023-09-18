@@ -12,10 +12,11 @@ SKIP_ITEMS = {
 
 #Config
 OVERWRITE_ALL = True  # Set to False if you don't want to overwrite every database entry
-DEBUG_PRINT_API = True
+DEBUG_PRINT_API = False  # Set to True if you want to print the API response to the console
+
 #List of categories to query the API
 api_categories = ["Category:Boon","Category:Hat","Category:Clothing","Category:Gloves","Category:Weapon","Category:Boots","Category:Companion","Category:Destiny","Category:Spouse","Category:Treasure","Category:Tools_of_the_Trade","Category:Affiliation","Category:Transport","Category:Home_Comfort","Category:Ship","Category:Club"]
-# api_categories = ["Category:Weapon"]
+# api_categories = ["Category:Ship"]
 # api_categories = ["Category:Companion"]
 
 dashes = "=========================================\n"

@@ -7,9 +7,14 @@ import os
 absFilePath = os.path.abspath(__file__)
 os.chdir( os.path.dirname(absFilePath) )
 
-# Open the SQLite database
-conn = sqlite3.connect('itemViewer/items.db')
-cursor = conn.cursor()
+try:
+    # Open the SQLite database
+    conn = sqlite3.connect('items.db')
+    cursor = conn.cursor()
+except Exception as e:
+    print("ERROR: Could not open 'items.db'. Make sure it's in the same directory as this file.")
+    print(e)
+    exit()
 
 # Set all the "have" values to 0
 cursor.execute("UPDATE items SET have = 0")
@@ -19,7 +24,7 @@ errorWrite = 0
 dashes = "=========================================\n"
 
 # Load the JSON data
-with open('character.json') as f:
+with open('myself.json') as f:
     data = json.load(f)
 
 possessions_end = len(data['possessions'])

@@ -10,17 +10,11 @@ from colour import Color
 
 # Configuration
 DATABASE = 'items.db'
-
-# stats_group = [
-#     ["Watchful", "Shadowy", "Dangerous", "Persuasive"],
-#     ["Bizarre", "Dreaded", "Respectable"],
-#     ["A_Player_of_Chess", "Artisan_of_the_Red_Science", "Glasswork", "Kataleptic_Toxicology", "Mithridacy", "Monstrous_Anatomy", "Shapeling_Arts", "Zeefaring", "Neathproofed", "Steward_of_the_Discordance"]
-# ]
-
+icon_folder = "itemViewer/static/icons/"
 
 # Basic Variables
-# https://images.fallenlondon.com/icons/owlsmall.png
-icon_folder = "itemViewer/static/icons/"
+
+
 
 # TODO: Include the stat groups as a seperate table in the SQL with a column for "include"? Also "stat_type" = Main, reputation, etc.
 # Might be better than putting them all here?
@@ -53,22 +47,27 @@ stat_group = {
 }
 # totals = {stat: 0 for stat in stat_group}
 
-
 # main_stats = ["Watchful", "Shadowy", "Dangerous", "Persuasive"]
 # rep_stats = ["Bizarre", "Dreaded", "Respectable"]
 # advanced_stats= ["A_Player_of_Chess", "Artisan_of_the_Red_Science", "Glasswork", "Kataleptic_Toxicology", "Mithridacy", "Monstrous_Anatomy", "Shapeling_Arts", "Zeefaring", "Neathproofed", "Steward_of_the_Discordance"]
 menace_stats= ["Nightmares", "Scandal", "Suspicion", "Wounds"]
-# old_stats=["Savage", "Elusive", "Baroque", "Cat_Upon_Your_Person"]
+old_stats=["Savage", "Elusive", "Baroque", "Cat_Upon_Your_Person"]
 
 # # 25 groups in total
-# stat_group = main_stats + rep_stats + advanced_stats + menace_stats + old_stats
+# stat_list = main_stats + rep_stats + advanced_stats + menace_stats + old_stats
+
+for key in old_stats: # + menace_stats
+    if key in stat_group:
+        del stat_group[key]
+
+
 # icon_group = main_icons + rep_icons + advanced_icons + menace_icons + old_icons
 
 changeable_categories = ["Hat","Clothing","Gloves","Weapon","Boots","Companion","Affiliation","Transport","Home_Comfort"]
 static_categories = ["Spouse","Treasure","Destiny","Tools_of_the_Trade","Ship","Club"]
 all_categories = changeable_categories + static_categories
 
-item_type = ["have_item","free_item","all_item"]
+item_type = ["have_item","compare_item"]
 
 # table_dictionary[top_category][category][stat]["have_item"]["value"]
 # table_dictionary[]
@@ -77,13 +76,6 @@ table_dictionary = {
     "Static":{}
 }
 
-# Color block
-red = Color("red")
-color_list = list(red.range_to(Color("green"),11))
-
-color_dic = {}
-for i in range(len(color_list)):
-    color_dic[f"item-value-color-{i}"] = str(color_list[i])
 
 app = Flask(__name__)
 app.config.from_object(__name__)
@@ -117,6 +109,16 @@ def smallify_icons(icon):
     return smallified_name
 
 def set_colors(fate_value=None):
+    # Color block
+    color_worst = Color("white")
+    color_best = Color("green")
+    color_list = list(color_best.range_to(color_worst,11))
+
+    color_dic = {}
+    # Take the color list we made and for each color, item-value-color-#
+    for i in range(len(color_list)):
+        color_dic[f"item-value-color-{i}"] = str(color_list[i])
+    
     for category in all_categories:
             for stat in stat_group:
                 if fate_value == 0:
@@ -139,7 +141,7 @@ def set_colors(fate_value=None):
 
                     # have_vs_compare = have_value % compare_value
 
-                stat_shortcut["have_item"]["color"] = f"item-value-color-{have_vs_compare}"
+                stat_shortcut["have_item"]["color"] = color_dic[have_vs_compare]
 
                 print(f"For {category} with: '{stat}' {have_value} / {compare_value} = {have_vs_compare}")
                 print(f"Assigned colour {str(color_list[have_vs_compare])} to it. {have_vs_compare}th color.")
@@ -147,6 +149,7 @@ def set_colors(fate_value=None):
 
 def download_icon(icon):
     # First open /static/icons and check if the file already exists there, if not, download the icon from: https://images.fallenlondon.com/icons/{icon}
+    # https://images.fallenlondon.com/icons/owlsmall.png
     icon_path = icon_folder + icon
     
     # Check if the icon already exists
@@ -188,7 +191,33 @@ def populate_dictionary(category, stat, have_value, fate_value, title, value, or
     # Now, populate the table_dictionary
     table_dictionary["Changeable" if category in changeable_categories else "Static"][category][stat][item_key] = item_dict
 
-def create_table(totals,have_value=None, fate_value=None, compare_table=None):
+def create_table():
+    """
+    Creates the table that will be used.
+    """
+    for category in changeable_categories + static_categories:
+        if category in static_categories:
+            table_dictionary["Static"][category] = {}
+            table_top_category = table_dictionary["Static"][category]
+            #print(f"{category} is in Static")
+        else:
+            table_dictionary["Changeable"][category] = {}
+            table_top_category  = table_dictionary["Changeable"][category]
+            #print(f"{category} is in Changeable")
+        
+        # table_umbrella[category] = {}
+        for stat in (stat_group):
+            table_top_category[stat] = {}
+            for item in item_type:
+                table_top_category[stat][item] = {
+                    "item_name" : "",
+                    "value" : 0,
+                    "origin" : "",
+                    "icon" : ""
+                }
+            table_top_category[stat]["have_item"]["color"] = ""
+
+def update_table(totals,have_value=None, fate_value=None, compare_table=None):
     """"""
 
     """"""
@@ -251,34 +280,13 @@ def show_items():
         for stat, icon in stat_group.items():
             download_icon(icon)
 
-        for category in changeable_categories + static_categories:
-            if category in static_categories:
-                table_dictionary["Static"][category] = {}
-                table_top_category = table_dictionary["Static"][category]
-                #print(f"{category} is in Static")
-            else:
-                table_dictionary["Changeable"][category] = {}
-                table_top_category  = table_dictionary["Changeable"][category]
-                #print(f"{category} is in Changeable")
-            
-            # table_umbrella[category] = {}
-            for stat in (stat_group):
-                table_top_category[stat] = {}
-                for item in item_type:
-                    table_top_category[stat][item] = {
-                        "item_name" : "",
-                        "value" : 0,
-                        "origin" : "",
-                        "icon" : ""
-                    }
-                table_top_category[stat]["have_item"]["color"] = ""
-
+        create_table()
 
         # TODO: Add logic to compare tables and update the 'color' value in the dictionary
         # Populate the dictionaries
-        create_table(totals)  # For all_items
-        create_table(totals,have_value=1)  # For have_item
-        create_table(totals,fate_value=0)  # For free_item
+        update_table(totals)  # For all_items
+        update_table(totals,have_value=1)  # For have_item
+        update_table(totals,fate_value=0)  # For free_item
         # print(table_dictionary)
 
         set_colors(fate_value=0)

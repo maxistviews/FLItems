@@ -1,103 +1,105 @@
 {% macro render_table(table_dictionary, stat_group, all_categories,totals) %}
-    <table class="table">
-        <thead>
-            <!-- ROW 1: Category and the Stat Names -->
-            <tr>
-                <!-- <th><div class="header-category">Category</div></th> -->
-                <th class="header-category">Category</th>
-
-                {% for stat, icon in stat_group.items() %}
-                    {% set icon_path = 'icons/' + icon %}
-
-                    <!-- Header Icons -->
-                    <th> <img class="header-icon" src="{{ url_for('static', filename=icon_path)}}" alt="{{stat}}"> </th>
-
-                    <!-- Header Stat Names -->
-                    <!-- <th colspan="2" ><div class="header-statname">{{ stat|replace("_", " ") }}</div></th> -->
-                    <th colspan="2" ><p class="header-statname">{{ stat|replace("_", " ") }}</p></th>
-                {% endfor %}
-            </tr>
-            <!-- ROW 2: All the item/Value pairs. -->
-            <tr>
-                <!-- This is under Category just to give spacing -->
-                <th></th>
-
-                <!-- Each of the Item/Value pairs  -->
-                {% for stat in stat_group %}
-                    <th colspan="2">Item</th>
-                    <!-- <th>Value</th> -->
-                    <th class="header-totalvalue">{{totals[stat]}}</th>
-                {% endfor %}
-            </tr>
-        </thead>
-        <!-- Body of the table. Meat and Potatoes, if you will. -->
-        <tbody>
-            {% for category in all_categories %}
+    <div style="overflow-x:auto;">
+        <table class="table">
+            <thead>
+                <!-- ROW 1: Category and the Stat Names -->
                 <tr>
-                    <!-- First Column, remove the underscores. -->
-                    <th>
-                        <div class="sideheader-category">
-                            {{ category|replace("_", " ") }}
-                            
-                            {% if category in table_dictionary["Static"] %}
-                                <form method="post" action="/set_comparison">
-                                    <select name="comparison_type">
-                                        <option value="all_items">All Items</option>
-                                        <option value="free_items">Free Items</option>
-                                    </select>
-                                </form>
-                            {% endif %}
-                        </div>
-                    </th>
+                    <!-- <th><div class="header-category">Category</div></th> -->
+                    <th class="header-category">Category</th>
 
-                    {% for stat in stat_group %}
-                        {% if category in table_dictionary["Changeable"] %}
-                            {% set top_category = "Changeable" %}
-                        {% else %}
-                            {% set top_category = "Static" %}
-                        {% endif %}
-                        {% set current_stat = table_dictionary[top_category][category][stat] %}
-                        {% set current_stat_value = current_stat["have_item"]["value"] %}
+                    {% for stat, icon in stat_group.items() %}
+                        {% set icon_path = 'icons/' + icon %}
 
-                        {% if current_stat == 0 %}
-                            {% set item_max_zero = "item-max-zero"  %}
-                        {% else %}
-                            {% set item_max_zero = ""  %}
-                        {% endif %}
-                        
-                        {% set icon_path = 'icons/' + current_stat["have_item"]["icon"] %}
+                        <!-- Header Icons -->
+                        <th> <img class="header-icon" src="{{ url_for('static', filename=icon_path)}}" alt="{{stat}}"> </th>
 
-                        {% set item_value_color = "color:" + current_stat["have_item"]["color"] %}
-                        
-
-                        <!-- Icon -->
-                        <td> 
-                            <img class="{% if current_stat_value == 0 %} item-image-blank{%else%}item-image{% endif %}" src="{{ url_for('static', filename=icon_path) }}" alt="{{ stat }}">
-
-                        </td>
-                        <!-- Item Text, centered. -->
-                        <td>
-                            <div class="div-center">
-                            <p class="item-text {{item_max_zero}}">{{ current_stat["have_item"]["item_name"] }} </p>
-                            </div>
-                        </td>
-                        <!-- Make a set of classes instead that correspond to color values. -->
-                        <!-- <td class="item-value" style="{{item_value_color}}" > 
-                            {{ current_stat["have_item"]["value"] }}
-                            <div class="w3-border" style="color:gray">
-                                <div class="w3-grey" style="height:24px;width:40%"></div>
-                            </div>
-                        </td> -->
-                        <td > 
-                            <div class="item-value {{item_max_zero}} {{current_stat['have_item']['color']}}">{{ current_stat["have_item"]["value"] }}</div>
-                            <div class="w3-border" style="color:gray">
-                                <div class="w3-grey" style="height:24px;width:40%"></div>
-                            </div>
-                        </td>
+                        <!-- Header Stat Names -->
+                        <!-- <th colspan="2" ><div class="header-statname">{{ stat|replace("_", " ") }}</div></th> -->
+                        <th colspan="2" ><p class="header-statname">{{ stat|replace("_", " ") }}</p></th>
                     {% endfor %}
                 </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+                <!-- ROW 2: All the item/Value pairs. -->
+                <tr>
+                    <!-- This is under Category just to give spacing -->
+                    <th></th>
+
+                    <!-- Each of the Item/Value pairs  -->
+                    {% for stat in stat_group %}
+                        <th colspan="2">Item</th>
+                        <!-- <th>Value</th> -->
+                        <th class="header-totalvalue">{{totals[stat]}}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <!-- Body of the table. Meat and Potatoes, if you will. -->
+            <tbody>
+                {% for category in all_categories %}
+                    <tr>
+                        <!-- First Column, remove the underscores. -->
+                        <th>
+                            <div class="sideheader-category">
+                                {{ category|replace("_", " ") }}
+                                
+                                {% if category in table_dictionary["Static"] %}
+                                    <form method="post" action="/set_comparison">
+                                        <select name="comparison_type">
+                                            <option value="all_items">All Items</option>
+                                            <option value="free_items">Free Items</option>
+                                        </select>
+                                    </form>
+                                {% endif %}
+                            </div>
+                        </th>
+
+                        {% for stat in stat_group %}
+                            {% if category in table_dictionary["Changeable"] %}
+                                {% set top_category = "Changeable" %}
+                            {% else %}
+                                {% set top_category = "Static" %}
+                            {% endif %}
+                            {% set current_stat = table_dictionary[top_category][category][stat] %}
+                            {% set current_stat_value = current_stat["have_item"]["value"] %}
+
+                            {% if current_stat == 0 %}
+                                {% set item_max_zero = "item-max-zero"  %}
+                            {% else %}
+                                {% set item_max_zero = ""  %}
+                            {% endif %}
+                            
+                            {% set icon_path = 'icons/' + current_stat["have_item"]["icon"] %}
+
+                            {% set item_value_color = "color:" + current_stat["have_item"]["color"] %}
+                            
+
+                            <!-- Icon -->
+                            <td> 
+                                <img class="{% if current_stat_value == 0 %} item-image-blank{%else%}item-image{% endif %}" src="{{ url_for('static', filename=icon_path) }}" alt="{{ stat }}">
+
+                            </td>
+                            <!-- Item Text, centered. -->
+                            <td>
+                                <div class="div-center">
+                                <p class="item-text {{item_max_zero}}">{{ current_stat["have_item"]["item_name"] }} </p>
+                                </div>
+                            </td>
+                            <!-- Make a set of classes instead that correspond to color values. -->
+                            <!-- <td class="item-value" style="{{item_value_color}}" > 
+                                {{ current_stat["have_item"]["value"] }}
+                                <div class="w3-border" style="color:gray">
+                                    <div class="w3-grey" style="height:24px;width:40%"></div>
+                                </div>
+                            </td> -->
+                            <td > 
+                                <div class="item-value {{item_max_zero}} {{current_stat['have_item']['color']}}">{{ current_stat["have_item"]["value"] }}</div>
+                                <div class="w3-border" style="color:gray">
+                                    <div class="w3-grey" style="height:24px;width:40%"></div>
+                                </div>
+                            </td>
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
     <hr>
 {% endmacro %}
