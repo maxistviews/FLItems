@@ -218,7 +218,7 @@ def create_table():
                 }
             table_top_category[stat]["have_item"]["color"] = ""
 
-def update_table(totals,have_value=None, fate_value=None, compare_table=None):
+def update_table(totals, have_value=None, fate_value=None, compare_table=None):
     """"""
 
     """"""

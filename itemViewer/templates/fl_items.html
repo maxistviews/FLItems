@@ -11,11 +11,12 @@
 
         Options:
         <form method="post" action="/set_comparison">
-            <select name="comparison_type">
+            <select name="comparison_type" onchange="this.form.submit()">
                 <option value="all_items">All Items</option>
                 <option value="free_items">Free Items</option>
             </select>
         </form>
+        
         {{ render_table(table_dictionary, stat_group, all_categories,totals) }}
         
         <pre>{{ totals|tojson(indent=2) }}</pre>
