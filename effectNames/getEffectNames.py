@@ -1,6 +1,8 @@
 import requests
 import json
 
+SKIP_ATTRIBUTES = ["Aerial Armament", "Aerial Prowess", "Cat Upon Your Person"]
+
 def get_effect_names():
     # The base URL of the API endpoint
     url = "https://fallenlondon.wiki/w/api.php"
@@ -28,7 +30,12 @@ def get_effect_names():
         data = response.json()
 
         # Extract the effect names from this page of results and add them to the list
-        effect_names.extend(page["title"] for page in data["query"]["categorymembers"])
+        for category in data["query"]["categorymembers"]:
+            if category["title"] not in SKIP_ATTRIBUTES:
+                effect_names.append(category["title"])
+        
+        # Old code for before I included SKIP_ATTRIBUTES. It's not needed anymore, but I'm keeping it here just in case.
+        #effect_names.extend(page["title"] for page in data["query"]["categorymembers"])
 
         # If there's a 'continue' field in the response, update the parameters with it to get the next page of results
         if "continue" in data:
@@ -38,7 +45,7 @@ def get_effect_names():
             break
     
     # Adds the menaces that can also be modified by clothing
-    effect_names.extend(['Nightmares','Scandal','Suspicion','Wounds'])
+    effect_names.extend(['Troubled Waters','Nightmares','Scandal','Suspicion','Wounds'])
 
     # Write the list of effect names to a file
     with open('effectNames.json', 'w') as f:
