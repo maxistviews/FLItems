@@ -5,32 +5,6 @@
 .backgroundold {color:#e2e2e2;}
 .backgroundFL {color: #bdb29e;}
 
-:root {
-    --item-value-color-0: red;
-    --item-value-color-1: #f23000;
-    --item-value-color-2: #e65c00;
-    --item-value-color-3: #d98200;
-    --item-value-color-4: #cca300;
-    --item-value-color-5: #bfbf00;
-    --item-value-color-6: #8fb300;
-    --item-value-color-7: #64a600;
-    --item-value-color-8: #3d9900;
-    --item-value-color-9: #1c8d00;
-    --item-value-color-10: green;
-}
-.item-value-color-0 {color: var(--item-value-color-0);}
-.item-value-color-1 {color: var(--item-value-color-1);}
-.item-value-color-2 {color: var(--item-value-color-2);}
-.item-value-color-3 {color: var(--item-value-color-3);}
-.item-value-color-4 {color: var(--item-value-color-4);}
-.item-value-color-5 {color: var(--item-value-color-5);}
-.item-value-color-6 {color: var(--item-value-color-6);}
-.item-value-color-7 {color: var(--item-value-color-7);}
-.item-value-color-8 {color: var(--item-value-color-8);}
-.item-value-color-9 {color: var(--item-value-color-9);}
-.item-value-color-10 {color: var(--item-value-color-10);}
-
-
 tr:nth-child(even) {
     /* background-color: #bdb29e; */
     background-image: url("https://images.fallenlondon.com/static/bg-paper.png");
@@ -133,3 +107,51 @@ tr {
     text-align: center;
     vertical-align: middle;
 } */
+
+
+/* Tooltip container */
+.tooltip {
+    position: relative;
+    display: inline-block;
+    border-bottom: 1px dotted black; /* If you want dots under the hoverable text */
+}
+
+/* Tooltip text */
+.tooltip .tooltiptext {
+visibility: hidden;
+width: 300px;
+background-color: #555;
+color: #fff;
+text-align: center;
+padding: 5px 0;
+border-radius: 6px;
+
+/* Position the tooltip text */
+position: absolute;
+z-index: 1;
+bottom: 125%;
+left: 50%;
+margin-left: -60px;
+
+/* Fade in tooltip */
+opacity: 0;
+transition: opacity 0.3s;
+}
+
+/* Tooltip arrow */
+.tooltip .tooltiptext::after {
+content: "";
+position: absolute;
+top: 100%;
+left: 50%;
+margin-left: -5px;
+border-width: 5px;
+border-style: solid;
+border-color: #555 transparent transparent transparent;
+}
+
+/* Show the tooltip text when you mouse over the tooltip container */
+.tooltip:hover .tooltiptext {
+visibility: visible;
+opacity: 1;
+}

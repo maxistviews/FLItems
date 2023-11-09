@@ -9,18 +9,29 @@
     <body>
         <h1 class="page-title">Your Fallen London Inventory</h1>
 
+        <h3>Current Comparison Type: {{ comparison_type }}</h3>
+        {% set current_stat = table_dictionary["Changeable"]["Companion"]["Watchful"] %}
+        {% set current_stat_value = current_stat["have_item"]["value"] %}
+        <h3>Best Watchful Companion: {{current_stat["compare_item"]["item_name"]}} = {{current_stat["compare_item"]["value"]}}</h3>
+        <h3>Your Watchful Companion: {{current_stat["have_item"]["item_name"]}} = {{current_stat_value}}</h3>
+        <h3>Color: {{current_stat["have_item"]["color"]}}</h3>
+
+
         Options:
         <form method="post" action="/set_comparison">
             <select name="comparison_type" onchange="this.form.submit()">
-                <option value="all_items">All Items</option>
-                <option value="free_items">Free Items</option>
+                <!-- <option value="all_item">All Items</option>
+                <option value="free_item">Free Items</option> -->
+                <option value="all_item" {{ 'selected' if session['comparison_type'] == 'all_item' else '' }}>All Items</option>
+                <option value="free_item" {{ 'selected' if session['comparison_type'] == 'free_item' else '' }}>Free Items</option>
+
             </select>
         </form>
         
         {{ render_table(table_dictionary, stat_group, all_categories,totals) }}
         
-        <pre>{{ totals|tojson(indent=2) }}</pre>
-        <!-- <pre>{{ table_dictionary|tojson(indent=2) }}</pre> -->
+        <!-- <pre>{{ totals|tojson(indent=2) }}</pre> -->
+        <pre>{{ table_dictionary|tojson(indent=2) }}</pre>
 
         <h2>Test table</h2>
         <table class="table">

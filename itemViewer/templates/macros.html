@@ -43,8 +43,8 @@
                                 {% if category in table_dictionary["Static"] %}
                                     <form method="post" action="/set_comparison">
                                         <select name="comparison_type">
-                                            <option value="all_items">All Items</option>
-                                            <option value="free_items">Free Items</option>
+                                            <option value="all_item">All Items</option>
+                                            <option value="free_item">Free Items</option>
                                         </select>
                                     </form>
                                 {% endif %}
@@ -89,11 +89,29 @@
                                     <div class="w3-grey" style="height:24px;width:40%"></div>
                                 </div>
                             </td> -->
-                            <td > 
-                                <div class="item-value {{item_max_zero}} {{current_stat['have_item']['color']}}">{{ current_stat["have_item"]["value"] }}</div>
-                                <div class="w3-border" style="color:gray">
-                                    <div class="w3-grey" style="height:24px;width:40%"></div>
+                            <td >
+                                <div class="tooltip">
+                                    <div style="color:{{current_stat['have_item']['color']}}" class="item-value {{item_max_zero}}">{{ current_stat["have_item"]["value"] }}</div>
+                                    <span class="tooltiptext">
+                                        <table>
+                                            <tr>
+                                                <th>
+                                                    <img class="{% if current_stat_value == 0 %} item-image-blank{%else%}item-image{% endif %}" src="{{ url_for('static', filename=icon_path) }}" alt="{{ stat }}">
+                                                </th>
+                                                <th>
+                                                    <p>{{ current_stat['compare_item']['item_name'] }} </p>
+                                                </th>
+                                                <th>
+                                                    {{ current_stat['compare_item']['value'] }}
+                                                </th>
+                                            </tr>
+                                        </table>
+                                        
+                                        <!-- {{ current_stat['compare_item']['item_name'] }}: {{ current_stat['compare_item']['value'] }}</span> -->
                                 </div>
+                                <!-- <div class="w3-border" style="color:gray">
+                                    <div class="w3-grey" style="height:24px;width:40%"></div>
+                                </div> -->
                             </td>
                         {% endfor %}
                     </tr>
