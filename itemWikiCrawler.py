@@ -20,7 +20,7 @@ DB_PATH = "items.db"  # Path to the database file
 api_categories = ["Category:Boon","Category:Hat","Category:Clothing","Category:Gloves","Category:Weapon","Category:Boots","Category:Companion","Category:Destiny","Category:Spouse","Category:Treasure","Category:Tools_of_the_Trade","Category:Affiliation","Category:Transport","Category:Home_Comfort","Category:Ship","Category:Club"]
 # api_categories = ["Category:Home_Comfort"]
 # api_categories = ["Category:Ship"]
-api_categories = ["Category:Companion"]
+# api_categories = ["Category:Companion"]
 # api_categories = ["Category:Hat"]
 
 cl_categories = ["Category:Fate Story Items","Category:Fate Items","Category: Retired"]
